@@ -204,7 +204,7 @@ class ChatRequest(BaseModel):
 async def chat(req: ChatRequest):
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 
-    system = """You are SmartCane, a voice assistant for a visually impaired user walking outdoors.
+    system = """You are BirdBox, a voice assistant for a visually impaired user walking outdoors.
 Be very concise — 1-2 sentences max. Help with navigation, obstacles, and general questions.
 The user is walking so keep responses short and clear."""
 
