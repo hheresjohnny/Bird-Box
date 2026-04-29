@@ -282,6 +282,7 @@
   let wakeActive   = false;
   let wakeRecog    = null;
   let isScanning   = false; // lock: prevent overlapping camera AI calls
+  let scanAbort    = null;  // AbortController for in-flight scan — killed on wake word
 
   // ── NAVIGATION STATE ─────────────────────────────────────────
   let navActive    = false;
@@ -392,11 +393,12 @@
   }
 
   // ── ANALYZE ──────────────────────────────────────────────────
-  async function analyzeFrame(b64) {
+  async function analyzeFrame(b64, signal) {
     const res = await fetch(`${BACKEND}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-      body: JSON.stringify({ image: b64 })
+      body: JSON.stringify({ image: b64 }),
+      signal
     });
     if (!res.ok) throw new Error(`${res.status}`);
     return await res.json();
@@ -469,14 +471,15 @@
 
   // ── SCAN LOOP ────────────────────────────────────────────────
   async function doScan() {
-    if (commandMode || isScanning) return; // skip if voice active or already scanning
+    if (commandMode || isScanning) return;
     isScanning = true;
+    scanAbort = new AbortController();
     scanLine.classList.add('running');
     if (!navActive) setStatus('scanning', 'SCANNING');
     try {
       const b64    = captureFrame();
-      const result = await analyzeFrame(b64);
-      if (commandMode) return; // voice activated while waiting for AI — drop result silently
+      const result = await analyzeFrame(b64, scanAbort.signal);
+      if (commandMode) return;
       frameCount++;
       frameCountEl.textContent = `FRAMES ANALYZED: ${frameCount}`;
       showAlert(result.level, result.message);
@@ -492,9 +495,10 @@
       const silent  = document.getElementById('silentSafe').checked;
       if (voiceOn && !commandMode && (result.level !== 'safe' || !silent)) speak(result.message);
     } catch (e) {
-      if (!commandMode) showAlert('urgent', `Error: ${e.message}`);
+      if (e.name !== 'AbortError' && !commandMode) showAlert('urgent', `Error: ${e.message}`);
     } finally {
       isScanning = false;
+      scanAbort  = null;
       scanLine.classList.remove('running');
       if (!commandMode && !navActive) setStatus('active', 'LIVE');
     }
@@ -582,6 +586,7 @@
 
   function activateCommand() {
     commandMode = true;
+    if (scanAbort) { scanAbort.abort(); scanAbort = null; } // kill any in-flight camera request NOW
     window.speechSynthesis?.cancel(); // immediately stop any ongoing obstacle speech
     vibrate('single'); playChime();
     setGlow('listening'); setStatus('listening', 'LISTENING');
