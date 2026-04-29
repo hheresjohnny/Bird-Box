@@ -755,15 +755,37 @@
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 100,
+          max_tokens: 80,
+          stream: true,
           system: `You are BirdBox, a voice assistant for a visually impaired user walking outdoors. Be very concise — 1-2 sentences max. Help with navigation, obstacles, and general questions.${locationStr}`,
           messages: [{ role: 'user', content: text }]
         })
       });
-      const data  = await res.json();
-      const reply = data.content[0].text.trim();
-      aiTranscript.textContent = `BirdBox: ${reply}`;
-      await speak(reply);
+
+      // stream tokens and speak as soon as we have a full sentence
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let reply = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') break;
+          try {
+            const json = JSON.parse(data);
+            if (json.type === 'content_block_delta') {
+              reply += json.delta?.text || '';
+              aiTranscript.textContent = `BirdBox: ${reply}`;
+            }
+          } catch {}
+        }
+      }
+
+      if (reply) await speak(reply.trim());
     } catch {
       await speak('Sorry, I could not connect to the server.');
     }
