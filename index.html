@@ -192,7 +192,7 @@
   </div>
   <div class="bottom-btns">
     <button class="btn btn-flip"  id="btnFlip"  onclick="void(0)">⟳</button>
-    <button class="btn btn-start" id="btnStart" onclick="void(0)">START</button>
+    <button class="btn btn-start" id="btnStart" onclick="void(0)">▶ START</button>
     <button class="btn btn-stop"  id="btnStop"  onclick="void(0)" style="display:none">■ STOP</button>
   </div>
   <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
@@ -281,6 +281,7 @@
   let commandMode  = false;
   let wakeActive   = false;
   let wakeRecog    = null;
+  let isScanning   = false; // lock: prevent overlapping camera AI calls
 
   // ── NAVIGATION STATE ─────────────────────────────────────────
   let navActive    = false;
@@ -468,12 +469,14 @@
 
   // ── SCAN LOOP ────────────────────────────────────────────────
   async function doScan() {
-    if (commandMode) return;
+    if (commandMode || isScanning) return; // skip if voice active or already scanning
+    isScanning = true;
     scanLine.classList.add('running');
     if (!navActive) setStatus('scanning', 'SCANNING');
     try {
       const b64    = captureFrame();
       const result = await analyzeFrame(b64);
+      if (commandMode) return; // voice activated while waiting for AI — drop result silently
       frameCount++;
       frameCountEl.textContent = `FRAMES ANALYZED: ${frameCount}`;
       showAlert(result.level, result.message);
@@ -487,10 +490,11 @@
       }
       const voiceOn = document.getElementById('voiceAlerts').checked;
       const silent  = document.getElementById('silentSafe').checked;
-      if (voiceOn && (result.level !== 'safe' || !silent)) speak(result.message);
+      if (voiceOn && !commandMode && (result.level !== 'safe' || !silent)) speak(result.message);
     } catch (e) {
-      showAlert('urgent', `Error: ${e.message}`);
+      if (!commandMode) showAlert('urgent', `Error: ${e.message}`);
     } finally {
+      isScanning = false;
       scanLine.classList.remove('running');
       if (!commandMode && !navActive) setStatus('active', 'LIVE');
     }
@@ -578,6 +582,7 @@
 
   function activateCommand() {
     commandMode = true;
+    window.speechSynthesis?.cancel(); // immediately stop any ongoing obstacle speech
     vibrate('single'); playChime();
     setGlow('listening'); setStatus('listening', 'LISTENING');
     voiceBox.classList.add('visible');
