@@ -31,158 +31,91 @@
     position: relative;
   }
 
-  /* ── FULL SCREEN CAMERA ── */
   #video {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; z-index: 1;
   }
-
   canvas { display: none; }
 
-  /* ── SIRI GLOW BORDER ── */
+  /* ── GLOW BORDER ── */
   #glowBorder {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    pointer-events: none;
-    border-radius: 0;
-    transition: all .3s;
+    position: fixed; inset: 0;
+    z-index: 10; pointer-events: none;
+    transition: box-shadow .4s;
   }
-
-  #glowBorder.idle {
-    box-shadow: inset 0 0 0px 0px transparent;
-  }
-
+  #glowBorder.idle    { box-shadow: none; }
   #glowBorder.listening {
-    box-shadow:
-      inset 0 0 60px 8px rgba(0,229,200,0.6),
-      inset 0 0 120px 20px rgba(0,229,200,0.2);
-    animation: glow-listening 1.2s ease-in-out infinite;
+    box-shadow: inset 0 0 60px 8px rgba(0,229,200,.6), inset 0 0 120px 20px rgba(0,229,200,.2);
+    animation: glow-teal 1.2s ease-in-out infinite;
   }
-
   #glowBorder.speaking {
-    box-shadow:
-      inset 0 0 60px 8px rgba(255,176,32,0.6),
-      inset 0 0 120px 20px rgba(255,176,32,0.2);
-    animation: glow-speaking .8s ease-in-out infinite;
+    box-shadow: inset 0 0 60px 8px rgba(255,176,32,.6), inset 0 0 120px 20px rgba(255,176,32,.2);
+    animation: glow-amber .8s ease-in-out infinite;
   }
-
   #glowBorder.urgent {
-    box-shadow:
-      inset 0 0 60px 8px rgba(255,69,69,0.7),
-      inset 0 0 120px 20px rgba(255,69,69,0.3);
-    animation: glow-urgent .4s ease-in-out infinite;
+    box-shadow: inset 0 0 80px 12px rgba(255,69,69,.8), inset 0 0 160px 30px rgba(255,69,69,.3);
+    animation: glow-red .4s ease-in-out infinite;
   }
-
   #glowBorder.warning {
-    box-shadow:
-      inset 0 0 40px 4px rgba(255,176,32,0.5),
-      inset 0 0 80px 10px rgba(255,176,32,0.15);
+    box-shadow: inset 0 0 40px 4px rgba(255,176,32,.4), inset 0 0 80px 10px rgba(255,176,32,.15);
   }
-
-  @keyframes glow-listening {
-    0%,100% { box-shadow: inset 0 0 60px 8px rgba(0,229,200,0.6), inset 0 0 120px 20px rgba(0,229,200,0.2); }
-    50%      { box-shadow: inset 0 0 80px 16px rgba(0,229,200,0.9), inset 0 0 160px 40px rgba(0,229,200,0.4); }
-  }
-  @keyframes glow-speaking {
-    0%,100% { box-shadow: inset 0 0 60px 8px rgba(255,176,32,0.6), inset 0 0 120px 20px rgba(255,176,32,0.2); }
-    50%      { box-shadow: inset 0 0 80px 16px rgba(255,176,32,0.9), inset 0 0 160px 40px rgba(255,176,32,0.4); }
-  }
-  @keyframes glow-urgent {
-    0%,100% { box-shadow: inset 0 0 60px 8px rgba(255,69,69,0.7), inset 0 0 120px 20px rgba(255,69,69,0.3); }
-    50%      { box-shadow: inset 0 0 100px 20px rgba(255,69,69,1), inset 0 0 180px 50px rgba(255,69,69,0.5); }
-  }
+  @keyframes glow-teal  { 0%,100%{box-shadow:inset 0 0 60px 8px rgba(0,229,200,.6),inset 0 0 120px 20px rgba(0,229,200,.2)} 50%{box-shadow:inset 0 0 90px 16px rgba(0,229,200,.9),inset 0 0 180px 40px rgba(0,229,200,.4)} }
+  @keyframes glow-amber { 0%,100%{box-shadow:inset 0 0 60px 8px rgba(255,176,32,.6),inset 0 0 120px 20px rgba(255,176,32,.2)} 50%{box-shadow:inset 0 0 90px 16px rgba(255,176,32,.9),inset 0 0 180px 40px rgba(255,176,32,.4)} }
+  @keyframes glow-red   { 0%,100%{box-shadow:inset 0 0 80px 12px rgba(255,69,69,.8),inset 0 0 160px 30px rgba(255,69,69,.3)} 50%{box-shadow:inset 0 0 120px 24px rgba(255,69,69,1),inset 0 0 220px 60px rgba(255,69,69,.5)} }
 
   /* scan line */
-  #scanLine {
-    position: fixed;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--teal), transparent);
-    opacity: 0;
-    z-index: 11;
-    pointer-events: none;
-  }
-  #scanLine.running { opacity: .5; animation: scan 2s ease-in-out infinite; }
-  @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:.5} 90%{opacity:.5} 100%{top:95%;opacity:0} }
+  #scanLine { position: fixed; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); opacity: 0; z-index: 11; pointer-events: none; }
+  #scanLine.running { opacity: .4; animation: scan 2s ease-in-out infinite; }
+  @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:.4} 90%{opacity:.4} 100%{top:95%;opacity:0} }
 
   /* ── TOP BAR ── */
   #topBar {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 20;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
     padding: 48px 20px 16px;
-    background: linear-gradient(to bottom, rgba(8,12,12,.85) 0%, transparent 100%);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,12,12,.85), transparent);
+    display: flex; align-items: center; justify-content: space-between;
   }
-
   .logo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--teal); }
   .logo span { color: #fff; }
-
   .top-right { display: flex; align-items: center; gap: 10px; }
-  .status-pill {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 5px 10px;
-    border-radius: 99px;
-    background: rgba(8,12,12,.6);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    backdrop-filter: blur(4px);
-    transition: all .3s;
-  }
-  .status-pill.active   { color: var(--teal); border-color: var(--teal); }
-  .status-pill.scanning { color: var(--amber); border-color: var(--amber); }
-  .status-pill.listening { color: var(--teal); border-color: var(--teal); background: rgba(0,229,200,.1); }
+  .status-pill { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 5px 10px; border-radius: 99px; background: rgba(8,12,12,.6); border: 1px solid var(--border); color: var(--muted); backdrop-filter: blur(4px); transition: all .3s; }
+  .status-pill.active    { color: var(--teal);  border-color: var(--teal); }
+  .status-pill.scanning  { color: var(--amber); border-color: var(--amber); }
+  .status-pill.listening { color: var(--teal);  border-color: var(--teal); background: rgba(0,229,200,.1); }
   .status-pill.speaking  { color: var(--amber); border-color: var(--amber); background: rgba(255,176,32,.1); }
+  .btn-settings { width: 40px; height: 40px; border-radius: 50%; background: rgba(8,12,12,.6); border: 1px solid var(--border); color: var(--muted); font-size: 18px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); cursor: pointer; }
 
-  /* settings button */
-  .btn-settings {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: rgba(8,12,12,.6);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
-    cursor: pointer;
+  /* ── WAKE WORD HINT ── */
+  #wakeHint {
+    position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%);
+    z-index: 20; font-family: var(--mono); font-size: 11px; letter-spacing: .15em;
+    text-transform: uppercase; color: rgba(0,229,200,.6);
+    text-align: center; pointer-events: none;
+    transition: opacity 1s ease;
+    white-space: nowrap;
   }
+  #wakeHint.hidden { opacity: 0; }
 
   /* ── BOTTOM HUD ── */
   #bottomHud {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 20;
-    padding: 16px 20px 44px;
-    background: linear-gradient(to top, rgba(8,12,12,.9) 0%, transparent 100%);
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+    padding: 16px 16px 44px;
+    background: linear-gradient(to top, rgba(8,12,12,.9), transparent);
   }
 
-  /* alert message */
+  /* alert */
   #alertBox {
-    background: rgba(8,12,12,.85);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--teal);
-    border-radius: 10px;
-    padding: 14px 16px;
-    backdrop-filter: blur(8px);
-    margin-bottom: 14px;
-    display: none;
-    animation: slide-up .25s ease;
+    background: rgba(8,12,12,.88); border: 1px solid var(--border);
+    border-left: 4px solid var(--teal); border-radius: 10px;
+    padding: 14px 16px; backdrop-filter: blur(8px);
+    margin-bottom: 12px; display: none; animation: slide-up .25s ease;
   }
   #alertBox.visible { display: block; }
   #alertBox.urgent  { border-left-color: var(--red); }
   #alertBox.warning { border-left-color: var(--amber); }
   #alertBox.safe    { border-left-color: var(--teal); }
-  @keyframes slide-up { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes slide-up { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
   .alert-type { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   #alertBox.urgent  .alert-type { color: var(--red); }
   #alertBox.warning .alert-type { color: var(--amber); }
@@ -190,129 +123,66 @@
   .alert-msg  { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.4; }
   .alert-time { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 4px; }
 
-  /* voice transcript */
+  /* voice box */
   #voiceBox {
-    background: rgba(8,12,12,.85);
-    border: 1px solid var(--teal);
-    border-radius: 10px;
-    padding: 14px 16px;
-    backdrop-filter: blur(8px);
-    margin-bottom: 14px;
-    display: none;
-    animation: slide-up .25s ease;
+    background: rgba(8,12,12,.9); border: 1px solid var(--teal);
+    border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(8px);
+    margin-bottom: 12px; display: none; animation: slide-up .25s ease;
   }
   #voiceBox.visible { display: block; }
   .voice-user { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 6px; }
-  .voice-ai   { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5; }
+  .voice-ai   { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; }
 
-  /* bottom buttons */
+  /* buttons */
   .bottom-btns { display: flex; gap: 10px; }
   .btn {
     flex: 1; padding: 18px; border: none; border-radius: 14px;
     font-family: var(--display); font-size: 16px; font-weight: 700;
     letter-spacing: .02em; transition: all .15s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    user-select: none; -webkit-user-select: none;
-    min-height: 64px; cursor: pointer;
+    user-select: none; -webkit-user-select: none; min-height: 64px; cursor: pointer;
     backdrop-filter: blur(8px);
   }
   .btn:active { transform: scale(.96); }
   .btn-start { background: var(--teal); color: var(--bg); }
   .btn-stop  { background: rgba(255,69,69,.15); color: var(--red); border: 2px solid var(--red); }
   .btn-flip  { flex: 0 0 64px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); font-size: 22px; }
-
-  .frame-count {
-    font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3);
-    text-align: center; letter-spacing: .1em; margin-top: 8px;
-  }
-
-  /* wake word indicator */
-  #wakeIndicator {
-    position: fixed;
-    bottom: 160px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .15em;
-    text-transform: uppercase;
-    color: rgba(0,229,200,.5);
-    text-align: center;
-    pointer-events: none;
-    transition: opacity .3s;
-  }
-  #wakeIndicator.hidden { opacity: 0; }
+  .frame-count { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3); text-align: center; letter-spacing: .1em; margin-top: 8px; }
 
   /* no camera */
-  #noCam {
-    position: fixed; inset: 0; z-index: 5;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; background: var(--surface);
-  }
+  #noCam { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--surface); }
   #noCam .icon { font-size: 4rem; opacity: .4; }
   #noCam p { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.7; }
 
   /* ── SETTINGS OVERLAY ── */
-  #settingsOverlay {
-    position: fixed; inset: 0; z-index: 100;
-    background: rgba(8,12,12,.97);
-    backdrop-filter: blur(12px);
-    display: none;
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 60px 16px 40px;
-    gap: 14px;
-    animation: overlay-in .2s ease;
-  }
+  #settingsOverlay { position: fixed; inset: 0; z-index: 100; background: rgba(8,12,12,.97); backdrop-filter: blur(12px); display: none; flex-direction: column; overflow-y: auto; padding: 60px 16px 40px; gap: 14px; }
   #settingsOverlay.visible { display: flex; }
-  @keyframes overlay-in { from{opacity:0} to{opacity:1} }
-
-  .settings-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 8px;
-  }
+  .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .settings-title-main { font-size: 24px; font-weight: 800; color: var(--teal); }
-  .btn-close-settings {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--muted); font-size: 20px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-  }
-
+  .btn-close-settings { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
   .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
   .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
   .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
   .setting-label-text { font-size: 15px; font-weight: 600; color: var(--text); }
   .setting-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
-
   .haptic-demo { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
   .haptic-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all .15s; }
   .haptic-btn:active { background: var(--teal-dim); border-color: var(--teal); }
-
   .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; cursor: pointer; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 99px; transition: .2s; }
   .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: .2s; }
   .toggle input:checked + .toggle-slider { background: var(--teal-dim); border: 1px solid var(--teal); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--teal); }
-
-  .settings-input {
-    width: 100%; margin-top: 8px;
-    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none;
-  }
+  .settings-input { width: 100%; margin-top: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none; }
   .settings-input:focus { border-color: var(--teal); }
   .settings-input::placeholder { color: var(--muted); }
-
   .interval-row { display: flex; align-items: center; justify-content: space-between; }
   .interval-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
   .interval-pills { display: flex; gap: 6px; }
   .ipill { padding: 8px 14px; border-radius: 99px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; }
   .ipill.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
-
   .legend-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .legend-row:last-child { border-bottom: none; }
   .legend-pattern { font-family: var(--mono); font-size: 13px; color: var(--teal); width: 64px; flex-shrink: 0; }
@@ -321,21 +191,16 @@
 </head>
 <body>
 
-<!-- CAMERA -->
 <video id="video" autoplay playsinline muted></video>
 <canvas id="canvas"></canvas>
 <div id="scanLine"></div>
-
-<!-- SIRI GLOW BORDER -->
 <div id="glowBorder" class="idle"></div>
 
-<!-- NO CAMERA STATE -->
 <div id="noCam">
   <div class="icon">📷</div>
-  <p>Tap START to begin scanning.<br>Say "Hey BirdBox" to activate voice.</p>
+  <p>Tap START SCANNING to begin.</p>
 </div>
 
-<!-- TOP BAR -->
 <div id="topBar">
   <div class="logo">Bird<span>Box</span></div>
   <div class="top-right">
@@ -344,22 +209,18 @@
   </div>
 </div>
 
-<!-- WAKE WORD INDICATOR -->
-<div id="wakeIndicator">Say "Hey BirdBox"</div>
+<div id="wakeHint">Say "Hey BirdBox"</div>
 
-<!-- BOTTOM HUD -->
 <div id="bottomHud">
   <div id="voiceBox">
     <div class="voice-user" id="userTranscript"></div>
     <div class="voice-ai"   id="aiTranscript"></div>
   </div>
-
   <div id="alertBox">
     <div class="alert-type" id="alertType">DETECTING</div>
     <div class="alert-msg"  id="alertMsg">Initializing...</div>
     <div class="alert-time" id="alertTime"></div>
   </div>
-
   <div class="bottom-btns">
     <button class="btn btn-flip"  id="btnFlip"  onclick="void(0)">⟳</button>
     <button class="btn btn-start" id="btnStart" onclick="void(0)">▶ START SCANNING</button>
@@ -368,13 +229,12 @@
   <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
 </div>
 
-<!-- SETTINGS OVERLAY -->
+<!-- SETTINGS -->
 <div id="settingsOverlay">
   <div class="settings-header">
     <div class="settings-title-main">Settings</div>
     <button class="btn-close-settings" id="btnCloseSettings" onclick="void(0)">✕</button>
   </div>
-
   <div class="settings-section">
     <div class="section-label">📷 Camera</div>
     <div class="interval-row">
@@ -386,7 +246,6 @@
       </div>
     </div>
   </div>
-
   <div class="settings-section">
     <div class="section-label">🔔 Haptic Feedback</div>
     <div class="setting-row">
@@ -408,11 +267,10 @@
       <button class="haptic-btn" onclick="vibrate('nav')">▶ Nav</button>
     </div>
   </div>
-
   <div class="settings-section">
     <div class="section-label">🔊 Audio</div>
     <div class="setting-row">
-      <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
+      <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions aloud</div></div>
       <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
     </div>
     <div class="setting-row">
@@ -425,7 +283,6 @@
     </div>
     <input class="settings-input" id="elevenKey" type="password" placeholder="ElevenLabs API key (optional)">
   </div>
-
   <div class="settings-section">
     <div class="section-label">📡 Haptic Legend</div>
     <div class="legend-row"><div class="legend-pattern">·</div><div class="legend-desc">Warning — obstacle nearby</div></div>
@@ -436,52 +293,53 @@
 </div>
 
 <script>
-  // ── iOS audio unlock ─────────────────────────────────────────
+  // ── iOS unlock ───────────────────────────────────────────────
+  let audioUnlocked = false;
   document.addEventListener('touchstart', () => {
-    try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
-  }, { once: true });
+    if (!audioUnlocked) {
+      try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
+      audioUnlocked = true;
+    }
+  }, { passive: true });
 
   // ── CONFIG ───────────────────────────────────────────────────
   const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
-  const WAKE_WORDS = ['hey birdbox', 'hey bird box', 'birdbox', 'bird box'];
+  const WAKE_WORDS = ['hey birdbox', 'hey bird box', 'birdbox', 'bird box', 'hey bird'];
   let stream       = null;
   let scanInterval = null;
   let facingMode   = 'environment';
   let intervalMs   = 2500;
   let frameCount   = 0;
   let userLocation = null;
-  let wakeListening = false;
-  let commandMode   = false;
+  let commandMode  = false;
+  let wakeLoop     = null;
 
   // ── DOM ──────────────────────────────────────────────────────
-  const video           = document.getElementById('video');
-  const canvas          = document.getElementById('canvas');
-  const ctx             = canvas.getContext('2d');
-  const btnStart        = document.getElementById('btnStart');
-  const btnStop         = document.getElementById('btnStop');
-  const btnFlip         = document.getElementById('btnFlip');
-  const alertBox        = document.getElementById('alertBox');
-  const alertTypeEl     = document.getElementById('alertType');
-  const alertMsgEl      = document.getElementById('alertMsg');
-  const alertTimeEl     = document.getElementById('alertTime');
-  const statusPill      = document.getElementById('statusPill');
-  const scanLine        = document.getElementById('scanLine');
-  const noCam           = document.getElementById('noCam');
-  const frameCountEl    = document.getElementById('frameCount');
-  const glowBorder      = document.getElementById('glowBorder');
-  const wakeIndicator   = document.getElementById('wakeIndicator');
-  const voiceBox        = document.getElementById('voiceBox');
-  const userTranscript  = document.getElementById('userTranscript');
-  const aiTranscript    = document.getElementById('aiTranscript');
+  const video          = document.getElementById('video');
+  const canvas         = document.getElementById('canvas');
+  const ctx            = canvas.getContext('2d');
+  const btnStart       = document.getElementById('btnStart');
+  const btnStop        = document.getElementById('btnStop');
+  const btnFlip        = document.getElementById('btnFlip');
+  const alertBox       = document.getElementById('alertBox');
+  const alertTypeEl    = document.getElementById('alertType');
+  const alertMsgEl     = document.getElementById('alertMsg');
+  const alertTimeEl    = document.getElementById('alertTime');
+  const statusPill     = document.getElementById('statusPill');
+  const scanLine       = document.getElementById('scanLine');
+  const noCam          = document.getElementById('noCam');
+  const frameCountEl   = document.getElementById('frameCount');
+  const glowBorder     = document.getElementById('glowBorder');
+  const wakeHint       = document.getElementById('wakeHint');
+  const voiceBox       = document.getElementById('voiceBox');
+  const userTranscript = document.getElementById('userTranscript');
+  const aiTranscript   = document.getElementById('aiTranscript');
 
   // ── SETTINGS ─────────────────────────────────────────────────
-  document.getElementById('btnSettings').addEventListener('click', () => {
-    document.getElementById('settingsOverlay').classList.add('visible');
-  });
-  document.getElementById('btnCloseSettings').addEventListener('click', () => {
-    document.getElementById('settingsOverlay').classList.remove('visible');
-  });
-
+  document.getElementById('btnSettings').addEventListener('click', () =>
+    document.getElementById('settingsOverlay').classList.add('visible'));
+  document.getElementById('btnCloseSettings').addEventListener('click', () =>
+    document.getElementById('settingsOverlay').classList.remove('visible'));
   document.querySelectorAll('.ipill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.ipill').forEach(p => p.classList.remove('active'));
@@ -494,14 +352,7 @@
   function initLocation() {
     if (!navigator.geolocation) return;
     const update = () => navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        fetch(`${BACKEND}/location/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-          body: JSON.stringify({ ...userLocation, level: 'safe', message: 'Location acquired' })
-        }).catch(() => {});
-      },
+      (pos) => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
       () => {}, { enableHighAccuracy: true }
     );
     update();
@@ -521,7 +372,7 @@
       noCam.style.display = 'none';
       return true;
     } catch {
-      showAlert('urgent', 'Camera access denied.');
+      showAlert('urgent', 'Camera access denied. Allow camera permission.');
       return false;
     }
   }
@@ -536,7 +387,7 @@
     canvas.height = video.videoHeight || 480;
     ctx.drawImage(video, 0, 0);
     const scale = Math.min(1, 512 / canvas.width);
-    const w = Math.round(canvas.width  * scale);
+    const w = Math.round(canvas.width * scale);
     const h = Math.round(canvas.height * scale);
     const small = document.createElement('canvas');
     small.width = w; small.height = h;
@@ -567,9 +418,8 @@
     if (level === 'warning' && document.getElementById('hapticWarning').checked) vibrate('single');
   }
 
-  // ── TTS ──────────────────────────────────────────────────────
+  // ── TTS — always speaks, uses ElevenLabs if enabled ──────────
   async function speak(text) {
-    if (!document.getElementById('voiceAlerts').checked) return;
     const elevenKey = document.getElementById('elevenKey').value.trim();
     const useEleven = document.getElementById('useEleven').checked;
     if (useEleven && elevenKey) {
@@ -579,21 +429,23 @@
           headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
           body: JSON.stringify({ text, api_key: elevenKey })
         });
-        if (res.ok) { new Audio(URL.createObjectURL(await res.blob())).play(); return; }
+        if (res.ok) {
+          const audio = new Audio(URL.createObjectURL(await res.blob()));
+          audio.play();
+          return;
+        }
       } catch {}
     }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 1.1;
-      window.speechSynthesis.speak(utt);
-    }
+    // browser TTS fallback — always works
+    window.speechSynthesis?.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 1.0;
+    utt.volume = 1.0;
+    window.speechSynthesis?.speak(utt);
   }
 
   // ── UI HELPERS ───────────────────────────────────────────────
-  function setGlow(state) {
-    glowBorder.className = state;
-  }
+  function setGlow(state) { glowBorder.className = state; }
 
   function setStatus(state, label) {
     statusPill.className   = 'status-pill ' + state;
@@ -605,16 +457,15 @@
     alertTypeEl.textContent = level.toUpperCase();
     alertMsgEl.textContent  = message;
     alertTimeEl.textContent = new Date().toLocaleTimeString();
-    if (level === 'urgent')  setGlow('urgent');
+    if      (level === 'urgent')  setGlow('urgent');
     else if (level === 'warning') setGlow('warning');
-    else setGlow('idle');
-    // auto clear glow after 3s for non-urgent
+    else                          setGlow('idle');
     if (level !== 'urgent') setTimeout(() => { if (!commandMode) setGlow('idle'); }, 3000);
   }
 
   // ── SCAN LOOP ────────────────────────────────────────────────
   async function doScan() {
-    if (commandMode) return; // pause scanning while voice is active
+    if (commandMode) return;
     scanLine.classList.add('running');
     setStatus('scanning', 'SCANNING');
     try {
@@ -624,6 +475,8 @@
       frameCountEl.textContent = `FRAMES ANALYZED: ${frameCount}`;
       showAlert(result.level, result.message);
       hapticForLevel(result.level);
+
+      // push to dashboard
       if (userLocation) {
         fetch(`${BACKEND}/location/update`, {
           method: 'POST',
@@ -631,30 +484,46 @@
           body: JSON.stringify({ ...userLocation, level: result.level, message: result.message })
         }).catch(() => {});
       }
+
+      // speak obstacle — always speak urgent/warning, respect silent toggle for safe
       const silent = document.getElementById('silentSafe').checked;
-      if (!(silent && result.level === 'safe')) speak(result.message);
+      const voiceOn = document.getElementById('voiceAlerts').checked;
+      if (voiceOn) {
+        if (result.level !== 'safe') {
+          speak(result.message);
+        } else if (!silent) {
+          speak(result.message);
+        }
+      }
     } catch (e) {
       showAlert('urgent', `Error: ${e.message}`);
     } finally {
       scanLine.classList.remove('running');
-      setStatus('active', 'LIVE');
+      if (!commandMode) setStatus('active', 'LIVE');
     }
   }
 
+  // ── START / STOP ─────────────────────────────────────────────
   btnStart.addEventListener('click', async () => {
     const ok = await startCamera();
     if (!ok) return;
     btnStart.style.display = 'none';
     btnStop.style.display  = 'flex';
     setStatus('active', 'LIVE');
-    showAlert('safe', 'Camera active. Say "Hey BirdBox" for voice commands.');
-    startWakeWordListening();
+    showAlert('safe', 'Scanning active. Say "Hey BirdBox" anytime.');
+
+    // show wake hint for 4 seconds then fade
+    wakeHint.classList.remove('hidden');
+    setTimeout(() => wakeHint.classList.add('hidden'), 4000);
+
+    startWakeLoop();
     await doScan();
     scanInterval = setInterval(doScan, intervalMs);
   });
 
   btnStop.addEventListener('click', () => {
     clearInterval(scanInterval);
+    stopWakeLoop();
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null; video.srcObject = null;
     noCam.style.display    = 'flex';
@@ -665,113 +534,123 @@
     alertBox.className = '';
     scanLine.classList.remove('running');
     window.speechSynthesis?.cancel();
-    stopWakeWordListening();
   });
 
-  // ── WAKE WORD LISTENING ──────────────────────────────────────
-  let wakeRecognition = null;
+  // ── WAKE WORD LOOP ───────────────────────────────────────────
+  // Uses short non-continuous sessions and restarts automatically
+  // More reliable on iOS Safari than continuous mode
+  let wakeRecog  = null;
+  let wakeActive = false;
 
-  function startWakeWordListening() {
+  function startWakeLoop() {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return;
-    if (wakeListening) return;
+    wakeActive = true;
+    runWakeSession();
+  }
 
+  function stopWakeLoop() {
+    wakeActive = false;
+    if (wakeRecog) { try { wakeRecog.stop(); } catch {} wakeRecog = null; }
+  }
+
+  function runWakeSession() {
+    if (!wakeActive || commandMode) return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    wakeRecognition = new SR();
-    wakeRecognition.continuous     = true;
-    wakeRecognition.interimResults = true;
-    wakeRecognition.lang           = 'en-US';
+    wakeRecog = new SR();
+    wakeRecog.continuous     = false;
+    wakeRecog.interimResults = true;
+    wakeRecog.lang           = 'en-US';
+    wakeRecog.maxAlternatives = 3;
 
-    wakeRecognition.onstart = () => {
-      wakeListening = true;
-      wakeIndicator.classList.remove('hidden');
-    };
-
-    wakeRecognition.onend = () => {
-      wakeListening = false;
-      // restart unless stopped intentionally
-      if (stream) setTimeout(startWakeWordListening, 500);
-    };
-
-    wakeRecognition.onresult = (e) => {
-      const transcript = Array.from(e.results)
-        .map(r => r[0].transcript.toLowerCase())
-        .join(' ');
-
-      const detected = WAKE_WORDS.some(w => transcript.includes(w));
-      if (detected && !commandMode) {
-        wakeRecognition.stop();
-        wakeListening = false;
-        activateVoiceCommand();
+    wakeRecog.onresult = (e) => {
+      for (let i = 0; i < e.results.length; i++) {
+        for (let j = 0; j < e.results[i].length; j++) {
+          const t = e.results[i][j].transcript.toLowerCase().trim();
+          if (WAKE_WORDS.some(w => t.includes(w))) {
+            wakeRecog.abort();
+            if (!commandMode) activateCommand();
+            return;
+          }
+        }
       }
     };
 
-    wakeRecognition.onerror = () => {
-      wakeListening = false;
-      if (stream) setTimeout(startWakeWordListening, 1000);
+    wakeRecog.onend = () => {
+      if (wakeActive && !commandMode) {
+        setTimeout(runWakeSession, 300);
+      }
     };
 
-    try { wakeRecognition.start(); } catch {}
+    wakeRecog.onerror = (e) => {
+      if (e.error !== 'aborted' && wakeActive && !commandMode) {
+        setTimeout(runWakeSession, 1000);
+      }
+    };
+
+    try { wakeRecog.start(); } catch { setTimeout(runWakeSession, 1000); }
   }
 
-  function stopWakeWordListening() {
-    wakeListening = false;
-    wakeIndicator.classList.add('hidden');
-    if (wakeRecognition) { try { wakeRecognition.stop(); } catch {} }
+  // ── COMMAND MODE ─────────────────────────────────────────────
+  function playChime() {
+    try {
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1100].forEach((freq, i) => {
+        const osc  = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.connect(gain); gain.connect(actx.destination);
+        osc.frequency.value = freq;
+        const t = actx.currentTime + i * 0.15;
+        gain.gain.setValueAtTime(.25, t);
+        gain.gain.exponentialRampToValueAtTime(.001, t + .25);
+        osc.start(t); osc.stop(t + .25);
+      });
+    } catch {}
   }
 
-  // ── COMMAND MODE (after wake word) ───────────────────────────
-  function activateVoiceCommand() {
+  function activateCommand() {
     commandMode = true;
     vibrate('single');
+    playChime();
     setGlow('listening');
     setStatus('listening', 'LISTENING');
-    wakeIndicator.classList.add('hidden');
     voiceBox.classList.add('visible');
     userTranscript.textContent = '';
     aiTranscript.textContent   = 'Listening...';
 
-    // play a chime
-    try {
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc  = actx.createOscillator();
-      const gain = actx.createGain();
-      osc.connect(gain); gain.connect(actx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(.3, actx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .3);
-      osc.start(); osc.stop(actx.currentTime + .3);
-    } catch {}
-
-    // start command recognition
     const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
     const cmd = new SR();
-    cmd.continuous = false; cmd.interimResults = false; cmd.lang = 'en-US';
+    cmd.continuous     = false;
+    cmd.interimResults = false;
+    cmd.lang           = 'en-US';
+    cmd.maxAlternatives = 1;
+
+    let gotResult = false;
 
     cmd.onresult = async (e) => {
+      gotResult = true;
       const text = e.results[0][0].transcript;
       userTranscript.textContent = `You: ${text}`;
       aiTranscript.textContent   = 'Thinking...';
       setGlow('speaking');
       setStatus('speaking', 'RESPONDING');
       await handleVoiceCommand(text);
-      endCommandMode();
+      endCommand();
     };
 
-    cmd.onerror = () => { endCommandMode(); };
-    cmd.onend   = () => { if (commandMode && !aiTranscript.textContent.startsWith('BirdBox')) endCommandMode(); };
+    cmd.onerror = () => { if (!gotResult) endCommand(); };
+    cmd.onend   = () => { if (!gotResult) endCommand(); };
 
-    setTimeout(() => { try { cmd.start(); } catch {} }, 200);
+    setTimeout(() => { try { cmd.start(); } catch { endCommand(); } }, 300);
   }
 
-  function endCommandMode() {
+  function endCommand() {
     commandMode = false;
     setGlow('idle');
     setStatus('active', 'LIVE');
-    wakeIndicator.classList.remove('hidden');
     setTimeout(() => {
       voiceBox.classList.remove('visible');
-      startWakeWordListening();
-    }, 4000); // keep transcript visible for 4s
+      if (wakeActive) runWakeSession();
+    }, 5000);
   }
 
   // ── CLAUDE CHAT ──────────────────────────────────────────────
@@ -782,6 +661,7 @@
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({ message: text, location: userLocation })
       });
+      if (!res.ok) throw new Error(`${res.status}`);
       const data  = await res.json();
       const reply = data.reply;
       aiTranscript.textContent = `BirdBox: ${reply}`;
@@ -795,7 +675,7 @@
           const places = await fetch(
             `${BACKEND}/places/nearby?lat=${lat}&lng=${lng}&query=${encodeURIComponent(match[1])}`,
             { headers: { 'ngrok-skip-browser-warning': 'true' } }
-          ).then(r => r.json());
+          ).then(r => r.json()).catch(() => null);
           if (places?.places?.length) {
             const opts = places.places.map((p, i) => `Option ${i+1}: ${p.name}`).join('. ');
             const msg  = `Found ${places.places.length} nearby. ${opts}. Which do you prefer?`;
@@ -805,7 +685,8 @@
         }
       }
     } catch (e) {
-      aiTranscript.textContent = `Error: ${e.message}`;
+      aiTranscript.textContent = `Error connecting to BirdBox backend.`;
+      speak('Sorry, I could not connect to the server.');
     }
   }
 </script>
