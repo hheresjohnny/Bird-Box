@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import List, Optional
 import anthropic
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -23,11 +21,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.get("/")
-async def serve_index():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    return FileResponse(os.path.join(base_dir, "index.html"))
 
 # ── Snowflake ─────────────────────────────────────────────────
 def get_snowflake():
@@ -275,11 +268,21 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat(req: ChatRequest):
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    location_str = ""
+    if req.location:
+        loc  = dict(req.location)
+        addr = loc.get("address")
+        lat  = loc.get("lat")
+        lng  = loc.get("lng")
+        if addr and addr != "Unknown location":
+            location_str = f"\nUser's current location: {addr} (coordinates: {lat}, {lng})"
+        elif lat and lng:
+            location_str = f"\nUser's current GPS coordinates: {lat}, {lng}"
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=100,
-        system="""You are BirdBox, a voice assistant for a visually impaired user walking outdoors.
-Be very concise — 1-2 sentences max. Help with navigation, obstacles, and general questions.""",
+        system=f"""You are BirdBox, a voice assistant for a visually impaired user walking outdoors.
+Be very concise — 1-2 sentences max. Help with navigation, obstacles, and general questions.{location_str}""",
         messages=[{"role": "user", "content": req.message}]
     )
     reply = message.content[0].text.strip()

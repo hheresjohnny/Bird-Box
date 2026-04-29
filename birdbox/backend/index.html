@@ -281,8 +281,8 @@
   let commandMode  = false;
   let wakeActive   = false;
   let wakeRecog    = null;
-  let isScanning   = false; // lock: prevent overlapping camera AI calls
-  let scanAbort    = null;  // AbortController for in-flight scan — killed on wake word
+  let isScanning   = false;
+  let scanAbort    = null;
 
   // ── NAVIGATION STATE ─────────────────────────────────────────
   let navActive    = false;
@@ -335,7 +335,8 @@
   document.getElementById('btnStopNav').addEventListener('click', stopNavigation);
 
   // ── LOCATION ────────────────────────────────────────────────
-  let geoWatchId = null;
+  let geoWatchId    = null;
+  let cachedAddress = null;
 
   function initLocation() {
     if (!navigator.geolocation) {
@@ -344,13 +345,21 @@
     }
     if (geoWatchId !== null) return;
 
-    // iOS Safari fix: getCurrentPosition first to "warm up" the GPS,
-    // then start watchPosition — avoids silent failure from dual permission dialogs
+    // iOS Safari: getCurrentPosition first to warm up GPS before watchPosition
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        showAlert('safe', `📍 GPS locked: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-        // now start continuous watch
+        try {
+          const geo = await fetch(
+            `${BACKEND}/location/address?lat=${userLocation.lat}&lng=${userLocation.lng}`,
+            { headers: { 'ngrok-skip-browser-warning': 'true' } }
+          );
+          const geoData = await geo.json();
+          cachedAddress = geoData.address;
+          showAlert('safe', `📍 ${cachedAddress}`);
+        } catch {
+          showAlert('safe', `📍 GPS locked: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+        }
         geoWatchId = navigator.geolocation.watchPosition(
           (pos) => {
             userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -358,8 +367,8 @@
           },
           (err) => {
             const msgs = {
-              1: 'Location permission denied. Enable GPS in Safari Settings.',
-              2: 'GPS signal unavailable. Go outside or near a window.',
+              1: 'Location denied. Go to Settings > Safari > Location and allow.',
+              2: 'GPS signal unavailable. Try moving outside.',
               3: 'GPS timed out. Retrying...'
             };
             showAlert('warning', msgs[err.code] || 'GPS error.');
@@ -540,8 +549,7 @@
   btnStart.addEventListener('click', async () => {
     const ok = await startCamera();
     if (!ok) return;
-    // iOS Safari: delay GPS init so camera permission dialog is fully closed first
-    setTimeout(initLocation, 800);
+    setTimeout(initLocation, 800); // iOS Safari: wait for camera dialog to close first
     btnStart.style.display = 'none';
     btnStop.style.display  = 'flex';
     setStatus('active', 'LIVE');
@@ -621,8 +629,8 @@
 
   function activateCommand() {
     commandMode = true;
-    if (scanAbort) { scanAbort.abort(); scanAbort = null; } // kill any in-flight camera request NOW
-    window.speechSynthesis?.cancel(); // immediately stop any ongoing obstacle speech
+    if (scanAbort) { scanAbort.abort(); scanAbort = null; }
+    window.speechSynthesis?.cancel();
     vibrate('single'); playChime();
     setGlow('listening'); setStatus('listening', 'LISTENING');
     voiceBox.classList.add('visible');
@@ -718,20 +726,9 @@
 
     // ── GENERAL CHAT ───────────────────────────────────────────
     try {
-      // resolve address for Claude so it can give useful location-aware answers
-      let locationContext = null;
-      if (userLocation) {
-        try {
-          const geo = await fetch(
-            `${BACKEND}/location/address?lat=${userLocation.lat}&lng=${userLocation.lng}`,
-            { headers: { 'ngrok-skip-browser-warning': 'true' } }
-          );
-          const geoData = await geo.json();
-          locationContext = { ...userLocation, address: geoData.address };
-        } catch {
-          locationContext = userLocation;
-        }
-      }
+      const locationContext = userLocation
+        ? { ...userLocation, address: cachedAddress || null }
+        : null;
       const res = await fetch(`${BACKEND}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
