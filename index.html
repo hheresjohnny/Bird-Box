@@ -21,265 +21,362 @@
     --display: 'Syne', sans-serif;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: #000;
     font-family: var(--display);
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
+    height: 100dvh;
     overflow: hidden;
+    position: relative;
   }
 
-  body::after {
-    content: '';
-    position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
-    pointer-events: none;
-    z-index: 100;
+  /* ── FULL SCREEN CAMERA ── */
+  #video {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
   }
 
-  /* ── HEADER ── */
-  header {
-    padding: 14px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    z-index: 10; flex-shrink: 0;
-    background: var(--surface);
-  }
-  .logo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--teal); }
-  .logo span { color: var(--text); }
-  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); transition: all .3s; display: inline-block; margin-right: 8px; }
-  .status-dot.active   { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); animation: pulse-dot 2s infinite; }
-  .status-dot.scanning { background: var(--amber); box-shadow: 0 0 8px rgba(255,176,32,.5); animation: pulse-dot 1s infinite; }
-  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .status-text { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
-  .status-text.active   { color: var(--teal); }
-  .status-text.scanning { color: var(--amber); }
-
-  /* ── TABS ── */
-  .tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
-  .tab { flex: 1; padding: 14px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; text-align: center; color: var(--muted); border-bottom: 2px solid transparent; transition: all .2s; }
-  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
-
-  /* ── PAGES ── */
-  .page { display: none; flex: 1; flex-direction: column; min-height: 0; }
-  .page.active { display: flex; }
-
-  /* ── CAMERA PAGE ── */
-  .camera-wrap { position: relative; flex: 1; overflow: hidden; background: #000; min-height: 0; }
-  video { width: 100%; height: 100%; object-fit: cover; display: block; }
   canvas { display: none; }
 
-  .hud { position: absolute; inset: 0; pointer-events: none; }
-  .corner { position: absolute; width: 32px; height: 32px; border-color: var(--teal); border-style: solid; opacity: .7; }
-  .corner.tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; }
-  .corner.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
-  .corner.bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; }
-  .corner.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
-
-  .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); opacity: 0; }
-  .scan-line.running { opacity: .6; animation: scan 2s ease-in-out infinite; }
-  @keyframes scan { 0%{top:10%;opacity:0} 10%{opacity:.6} 90%{opacity:.6} 100%{top:90%;opacity:0} }
-
-  /* alert box inside camera */
-  .alert-overlay {
-    position: absolute; top: 16px; left: 12px; right: 12px;
-    background: rgba(8,12,12,.92); border: 1px solid var(--border);
-    border-left: 4px solid var(--teal); border-radius: 8px;
-    padding: 14px 16px; backdrop-filter: blur(8px);
-    display: none; animation: slide-down .25s ease;
-  }
-  .alert-overlay.visible { display: block; }
-  .alert-overlay.urgent  { border-left-color: var(--red); }
-  .alert-overlay.warning { border-left-color: var(--amber); }
-  .alert-overlay.safe    { border-left-color: var(--teal); }
-  @keyframes slide-down { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .alert-type { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .alert-overlay.urgent  .alert-type { color: var(--red); }
-  .alert-overlay.warning .alert-type { color: var(--amber); }
-  .alert-overlay.safe    .alert-type { color: var(--teal); }
-  .alert-text { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
-  .alert-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-  .no-camera { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--surface); }
-  .no-camera .icon { font-size: 4rem; opacity: .4; }
-  .no-camera p { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.7; }
-
-  /* ── BOTTOM CONTROLS ── */
-  .controls {
-    padding: 16px 16px 32px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 12px;
-    flex-shrink: 0; z-index: 10;
+  /* ── SIRI GLOW BORDER ── */
+  #glowBorder {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    border-radius: 0;
+    transition: all .3s;
   }
 
-  .interval-row { display: flex; align-items: center; justify-content: space-between; }
-  .interval-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
-  .interval-pills { display: flex; gap: 6px; }
-  .ipill { padding: 8px 14px; border-radius: 99px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
-  .ipill.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+  #glowBorder.idle {
+    box-shadow: inset 0 0 0px 0px transparent;
+  }
 
-  .btn-row { display: flex; gap: 10px; }
+  #glowBorder.listening {
+    box-shadow:
+      inset 0 0 60px 8px rgba(0,229,200,0.6),
+      inset 0 0 120px 20px rgba(0,229,200,0.2);
+    animation: glow-listening 1.2s ease-in-out infinite;
+  }
+
+  #glowBorder.speaking {
+    box-shadow:
+      inset 0 0 60px 8px rgba(255,176,32,0.6),
+      inset 0 0 120px 20px rgba(255,176,32,0.2);
+    animation: glow-speaking .8s ease-in-out infinite;
+  }
+
+  #glowBorder.urgent {
+    box-shadow:
+      inset 0 0 60px 8px rgba(255,69,69,0.7),
+      inset 0 0 120px 20px rgba(255,69,69,0.3);
+    animation: glow-urgent .4s ease-in-out infinite;
+  }
+
+  #glowBorder.warning {
+    box-shadow:
+      inset 0 0 40px 4px rgba(255,176,32,0.5),
+      inset 0 0 80px 10px rgba(255,176,32,0.15);
+  }
+
+  @keyframes glow-listening {
+    0%,100% { box-shadow: inset 0 0 60px 8px rgba(0,229,200,0.6), inset 0 0 120px 20px rgba(0,229,200,0.2); }
+    50%      { box-shadow: inset 0 0 80px 16px rgba(0,229,200,0.9), inset 0 0 160px 40px rgba(0,229,200,0.4); }
+  }
+  @keyframes glow-speaking {
+    0%,100% { box-shadow: inset 0 0 60px 8px rgba(255,176,32,0.6), inset 0 0 120px 20px rgba(255,176,32,0.2); }
+    50%      { box-shadow: inset 0 0 80px 16px rgba(255,176,32,0.9), inset 0 0 160px 40px rgba(255,176,32,0.4); }
+  }
+  @keyframes glow-urgent {
+    0%,100% { box-shadow: inset 0 0 60px 8px rgba(255,69,69,0.7), inset 0 0 120px 20px rgba(255,69,69,0.3); }
+    50%      { box-shadow: inset 0 0 100px 20px rgba(255,69,69,1), inset 0 0 180px 50px rgba(255,69,69,0.5); }
+  }
+
+  /* scan line */
+  #scanLine {
+    position: fixed;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    opacity: 0;
+    z-index: 11;
+    pointer-events: none;
+  }
+  #scanLine.running { opacity: .5; animation: scan 2s ease-in-out infinite; }
+  @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:.5} 90%{opacity:.5} 100%{top:95%;opacity:0} }
+
+  /* ── TOP BAR ── */
+  #topBar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    padding: 48px 20px 16px;
+    background: linear-gradient(to bottom, rgba(8,12,12,.85) 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--teal); }
+  .logo span { color: #fff; }
+
+  .top-right { display: flex; align-items: center; gap: 10px; }
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 99px;
+    background: rgba(8,12,12,.6);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    backdrop-filter: blur(4px);
+    transition: all .3s;
+  }
+  .status-pill.active   { color: var(--teal); border-color: var(--teal); }
+  .status-pill.scanning { color: var(--amber); border-color: var(--amber); }
+  .status-pill.listening { color: var(--teal); border-color: var(--teal); background: rgba(0,229,200,.1); }
+  .status-pill.speaking  { color: var(--amber); border-color: var(--amber); background: rgba(255,176,32,.1); }
+
+  /* settings button */
+  .btn-settings {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(8,12,12,.6);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+  }
+
+  /* ── BOTTOM HUD ── */
+  #bottomHud {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 20;
+    padding: 16px 20px 44px;
+    background: linear-gradient(to top, rgba(8,12,12,.9) 0%, transparent 100%);
+  }
+
+  /* alert message */
+  #alertBox {
+    background: rgba(8,12,12,.85);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--teal);
+    border-radius: 10px;
+    padding: 14px 16px;
+    backdrop-filter: blur(8px);
+    margin-bottom: 14px;
+    display: none;
+    animation: slide-up .25s ease;
+  }
+  #alertBox.visible { display: block; }
+  #alertBox.urgent  { border-left-color: var(--red); }
+  #alertBox.warning { border-left-color: var(--amber); }
+  #alertBox.safe    { border-left-color: var(--teal); }
+  @keyframes slide-up { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .alert-type { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  #alertBox.urgent  .alert-type { color: var(--red); }
+  #alertBox.warning .alert-type { color: var(--amber); }
+  #alertBox.safe    .alert-type { color: var(--teal); }
+  .alert-msg  { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.4; }
+  .alert-time { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 4px; }
+
+  /* voice transcript */
+  #voiceBox {
+    background: rgba(8,12,12,.85);
+    border: 1px solid var(--teal);
+    border-radius: 10px;
+    padding: 14px 16px;
+    backdrop-filter: blur(8px);
+    margin-bottom: 14px;
+    display: none;
+    animation: slide-up .25s ease;
+  }
+  #voiceBox.visible { display: block; }
+  .voice-user { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 6px; }
+  .voice-ai   { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5; }
+
+  /* bottom buttons */
+  .bottom-btns { display: flex; gap: 10px; }
   .btn {
-    flex: 1; padding: 18px; border: none; border-radius: 12px;
+    flex: 1; padding: 18px; border: none; border-radius: 14px;
     font-family: var(--display); font-size: 16px; font-weight: 700;
     letter-spacing: .02em; transition: all .15s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     user-select: none; -webkit-user-select: none;
-    min-height: 60px;
+    min-height: 64px; cursor: pointer;
+    backdrop-filter: blur(8px);
   }
   .btn:active { transform: scale(.96); }
   .btn-start { background: var(--teal); color: var(--bg); }
-  .btn-stop  { background: transparent; color: var(--red); border: 2px solid var(--red); }
-  .btn-flip  { flex: 0 0 60px; background: var(--teal-dim); color: var(--teal); border: 1px solid var(--border); font-size: 22px; }
+  .btn-stop  { background: rgba(255,69,69,.15); color: var(--red); border: 2px solid var(--red); }
+  .btn-flip  { flex: 0 0 64px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); font-size: 22px; }
 
-  .frame-count { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; letter-spacing: .1em; }
+  .frame-count {
+    font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3);
+    text-align: center; letter-spacing: .1em; margin-top: 8px;
+  }
 
-  /* ── FLOATING VOICE BUTTON ── */
-  .voice-fab {
+  /* wake word indicator */
+  #wakeIndicator {
     position: fixed;
-    bottom: 120px;
-    right: 20px;
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: var(--surface);
-    border: 2px solid var(--teal);
-    color: var(--teal);
-    font-size: 1.8rem;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 200;
-    box-shadow: 0 4px 20px rgba(0,0,0,.4);
-    transition: all .15s;
-    user-select: none; -webkit-user-select: none;
-  }
-  .voice-fab:active { transform: scale(.94); }
-  .voice-fab.listening { background: var(--teal); color: var(--bg); animation: fab-pulse 1s infinite; border-color: var(--teal); }
-  .voice-fab.speaking  { background: var(--surface); color: var(--amber); border-color: var(--amber); animation: fab-pulse-amber 1s infinite; }
-  @keyframes fab-pulse       { 0%,100%{box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 0 var(--teal-glow)}       50%{box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 16px rgba(0,229,200,0)} }
-  @keyframes fab-pulse-amber { 0%,100%{box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 0 rgba(255,176,32,.4)} 50%{box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 16px rgba(255,176,32,0)} }
-
-  /* ── VOICE OVERLAY (Siri-style) ── */
-  .voice-overlay {
-    position: fixed; inset: 0;
-    background: rgba(8,12,12,.95);
-    z-index: 300;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 28px;
-    backdrop-filter: blur(12px);
-    animation: overlay-in .2s ease;
-  }
-  .voice-overlay.visible { display: flex; }
-  @keyframes overlay-in { from{opacity:0} to{opacity:1} }
-
-  .voice-orb {
-    width: 140px; height: 140px;
-    border-radius: 50%;
-    background: var(--teal-dim);
-    border: 2px solid var(--teal);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 3.5rem;
-    transition: all .2s;
-  }
-  .voice-orb.listening { background: var(--teal); animation: orb-pulse 1s infinite; }
-  .voice-orb.speaking  { border-color: var(--amber); animation: orb-pulse-amber 1s infinite; }
-  @keyframes orb-pulse       { 0%,100%{box-shadow:0 0 0 0 var(--teal-glow)}       50%{box-shadow:0 0 0 30px rgba(0,229,200,0)} }
-  @keyframes orb-pulse-amber { 0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,.4)} 50%{box-shadow:0 0 0 30px rgba(255,176,32,0)} }
-
-  .voice-status-text {
-    font-family: var(--mono);
-    font-size: 13px;
-    letter-spacing: .15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-align: center;
-  }
-  .voice-status-text.listening { color: var(--teal); }
-  .voice-status-text.speaking  { color: var(--amber); }
-
-  .voice-transcript {
-    max-width: 300px;
-    text-align: center;
-    padding: 0 20px;
-  }
-  .voice-transcript .user-text { color: var(--teal); font-size: 15px; font-weight: 600; margin-bottom: 10px; min-height: 20px; }
-  .voice-transcript .ai-text   { color: var(--text); font-size: 14px; line-height: 1.5; min-height: 20px; }
-
-  .btn-close-voice {
-    padding: 14px 40px;
-    background: transparent;
-    border: 1.5px solid var(--border);
-    border-radius: 99px;
-    color: var(--muted);
+    bottom: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: .1em;
+    letter-spacing: .15em;
     text-transform: uppercase;
+    color: rgba(0,229,200,.5);
+    text-align: center;
+    pointer-events: none;
+    transition: opacity .3s;
   }
-  .btn-close-voice:active { border-color: var(--teal); color: var(--teal); }
+  #wakeIndicator.hidden { opacity: 0; }
 
-  /* ── SETTINGS PAGE ── */
-  .settings-page { padding: 20px 16px; gap: 14px; overflow-y: auto; }
-  .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .settings-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+  /* no camera */
+  #noCam {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; background: var(--surface);
+  }
+  #noCam .icon { font-size: 4rem; opacity: .4; }
+  #noCam p { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.7; }
+
+  /* ── SETTINGS OVERLAY ── */
+  #settingsOverlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(8,12,12,.97);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 60px 16px 40px;
+    gap: 14px;
+    animation: overlay-in .2s ease;
+  }
+  #settingsOverlay.visible { display: flex; }
+  @keyframes overlay-in { from{opacity:0} to{opacity:1} }
+
+  .settings-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .settings-title-main { font-size: 24px; font-weight: 800; color: var(--teal); }
+  .btn-close-settings {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
   .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
   .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .setting-label { font-size: 15px; font-weight: 600; }
-  .setting-desc  { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .setting-label-text { font-size: 15px; font-weight: 600; color: var(--text); }
+  .setting-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
+
   .haptic-demo { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .haptic-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 11px; transition: all .15s; }
+  .haptic-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all .15s; }
   .haptic-btn:active { background: var(--teal-dim); border-color: var(--teal); }
-  .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+
+  .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; cursor: pointer; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 99px; transition: .2s; }
   .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: .2s; }
   .toggle input:checked + .toggle-slider { background: var(--teal-dim); border: 1px solid var(--teal); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--teal); }
+
+  .settings-input {
+    width: 100%; margin-top: 8px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none;
+  }
+  .settings-input:focus { border-color: var(--teal); }
+  .settings-input::placeholder { color: var(--muted); }
+
+  .interval-row { display: flex; align-items: center; justify-content: space-between; }
+  .interval-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+  .interval-pills { display: flex; gap: 6px; }
+  .ipill { padding: 8px 14px; border-radius: 99px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; }
+  .ipill.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+
+  .legend-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .legend-row:last-child { border-bottom: none; }
+  .legend-pattern { font-family: var(--mono); font-size: 13px; color: var(--teal); width: 64px; flex-shrink: 0; }
+  .legend-desc { font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Bird<span>Box</span></div>
-  <div style="display:flex;align-items:center">
-    <span class="status-dot" id="statusDot"></span>
-    <span class="status-text" id="statusText">OFFLINE</span>
-  </div>
-</header>
+<!-- CAMERA -->
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+<div id="scanLine"></div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="camera">📷 Camera</div>
-  <div class="tab" data-tab="settings">⚙️ Settings</div>
+<!-- SIRI GLOW BORDER -->
+<div id="glowBorder" class="idle"></div>
+
+<!-- NO CAMERA STATE -->
+<div id="noCam">
+  <div class="icon">📷</div>
+  <p>Tap START to begin scanning.<br>Say "Hey BirdBox" to activate voice.</p>
 </div>
 
-<!-- ══════════ CAMERA PAGE ══════════ -->
-<div class="page active" id="page-camera">
-  <div class="camera-wrap">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-    <div class="hud">
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
-      <div class="scan-line" id="scanLine"></div>
-    </div>
-    <div class="alert-overlay" id="alertOverlay">
-      <div class="alert-type" id="alertType">DETECTING</div>
-      <div class="alert-text" id="alertText">Initializing...</div>
-      <div class="alert-time" id="alertTime"></div>
-    </div>
-    <div class="no-camera" id="noCam">
-      <div class="icon">📷</div>
-      <p>Tap START SCANNING to begin.</p>
-    </div>
+<!-- TOP BAR -->
+<div id="topBar">
+  <div class="logo">Bird<span>Box</span></div>
+  <div class="top-right">
+    <div class="status-pill" id="statusPill">OFFLINE</div>
+    <div class="btn-settings" id="btnSettings">⚙️</div>
+  </div>
+</div>
+
+<!-- WAKE WORD INDICATOR -->
+<div id="wakeIndicator">Say "Hey BirdBox"</div>
+
+<!-- BOTTOM HUD -->
+<div id="bottomHud">
+  <div id="voiceBox">
+    <div class="voice-user" id="userTranscript"></div>
+    <div class="voice-ai"   id="aiTranscript"></div>
   </div>
 
-  <div class="controls">
+  <div id="alertBox">
+    <div class="alert-type" id="alertType">DETECTING</div>
+    <div class="alert-msg"  id="alertMsg">Initializing...</div>
+    <div class="alert-time" id="alertTime"></div>
+  </div>
+
+  <div class="bottom-btns">
+    <button class="btn btn-flip"  id="btnFlip"  onclick="void(0)">⟳</button>
+    <button class="btn btn-start" id="btnStart" onclick="void(0)">▶ START SCANNING</button>
+    <button class="btn btn-stop"  id="btnStop"  onclick="void(0)" style="display:none">■ STOP</button>
+  </div>
+  <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settingsOverlay">
+  <div class="settings-header">
+    <div class="settings-title-main">Settings</div>
+    <button class="btn-close-settings" id="btnCloseSettings" onclick="void(0)">✕</button>
+  </div>
+
+  <div class="settings-section">
+    <div class="section-label">📷 Camera</div>
     <div class="interval-row">
       <span class="interval-label">Scan every</span>
       <div class="interval-pills">
@@ -288,82 +385,54 @@
         <div class="ipill" data-val="4000">4s</div>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-flip" id="btnFlip" onclick="void(0)">⟳</button>
-      <button class="btn btn-start" id="btnStart" onclick="void(0)">▶ START SCANNING</button>
-      <button class="btn btn-stop"  id="btnStop"  onclick="void(0)" style="display:none">■ STOP</button>
-    </div>
-    <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
   </div>
-</div>
 
-<!-- ══════════ SETTINGS PAGE ══════════ -->
-<div class="page" id="page-settings">
-  <div class="settings-page">
-
-    <div class="settings-section">
-      <div class="settings-title">🔔 Haptic Feedback</div>
-      <div class="setting-row">
-        <div><div class="setting-label">Obstacle Warning</div><div class="setting-desc">Single short pulse</div></div>
-        <label class="toggle"><input type="checkbox" id="hapticWarning" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Urgent Obstacle</div><div class="setting-desc">Three rapid pulses</div></div>
-        <label class="toggle"><input type="checkbox" id="hapticUrgent" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Navigation Turn</div><div class="setting-desc">One long vibration</div></div>
-        <label class="toggle"><input type="checkbox" id="hapticNav" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="haptic-demo">
-        <button class="haptic-btn" onclick="vibrate('single')">▶ Single</button>
-        <button class="haptic-btn" onclick="vibrate('triple')">▶ Triple</button>
-        <button class="haptic-btn" onclick="vibrate('long')">▶ Long</button>
-        <button class="haptic-btn" onclick="vibrate('nav')">▶ Nav Turn</button>
-      </div>
+  <div class="settings-section">
+    <div class="section-label">🔔 Haptic Feedback</div>
+    <div class="setting-row">
+      <div><div class="setting-label-text">Obstacle Warning</div><div class="setting-desc">Single short pulse</div></div>
+      <label class="toggle"><input type="checkbox" id="hapticWarning" checked><span class="toggle-slider"></span></label>
     </div>
-
-    <div class="settings-section">
-      <div class="settings-title">🔊 Audio</div>
-      <div class="setting-row">
-        <div><div class="setting-label">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
-        <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Silent When Safe</div><div class="setting-desc">Don't speak on clear path</div></div>
-        <label class="toggle"><input type="checkbox" id="silentSafe" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row" style="border:none">
-        <div><div class="setting-label">ElevenLabs Voice</div><div class="setting-desc">Natural AI voice (optional)</div></div>
-        <label class="toggle"><input type="checkbox" id="useEleven"><span class="toggle-slider"></span></label>
-      </div>
-      <input class="api-input" id="elevenKey" type="password" placeholder="ElevenLabs API key"
-        style="width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;">
+    <div class="setting-row">
+      <div><div class="setting-label-text">Urgent Obstacle</div><div class="setting-desc">Three rapid pulses</div></div>
+      <label class="toggle"><input type="checkbox" id="hapticUrgent" checked><span class="toggle-slider"></span></label>
     </div>
-
-    <div class="settings-section">
-      <div class="settings-title">📡 Haptic Legend</div>
-      <div class="setting-row"><div><div class="setting-label">· Single pulse</div><div class="setting-desc">Warning — obstacle nearby</div></div></div>
-      <div class="setting-row"><div><div class="setting-label">··· Triple pulse</div><div class="setting-desc">Urgent — immediate hazard</div></div></div>
-      <div class="setting-row"><div><div class="setting-label">— Long pulse</div><div class="setting-desc">Navigation — turn coming up</div></div></div>
-      <div class="setting-row" style="border:none"><div><div class="setting-label">—— Extra long</div><div class="setting-desc">Destination reached</div></div></div>
+    <div class="setting-row">
+      <div><div class="setting-label-text">Navigation Turn</div><div class="setting-desc">One long vibration</div></div>
+      <label class="toggle"><input type="checkbox" id="hapticNav" checked><span class="toggle-slider"></span></label>
     </div>
-
+    <div class="haptic-demo">
+      <button class="haptic-btn" onclick="vibrate('single')">▶ Single</button>
+      <button class="haptic-btn" onclick="vibrate('triple')">▶ Triple</button>
+      <button class="haptic-btn" onclick="vibrate('long')">▶ Long</button>
+      <button class="haptic-btn" onclick="vibrate('nav')">▶ Nav</button>
+    </div>
   </div>
-</div>
 
-<!-- ══════════ FLOATING VOICE BUTTON ══════════ -->
-<button class="voice-fab" id="voiceFab" onclick="void(0)">🎤</button>
-
-<!-- ══════════ VOICE OVERLAY ══════════ -->
-<div class="voice-overlay" id="voiceOverlay">
-  <div class="voice-orb" id="voiceOrb">🎤</div>
-  <div class="voice-status-text" id="voiceStatusText">HOLD TO TALK</div>
-  <div class="voice-transcript">
-    <div class="user-text" id="userTranscript"></div>
-    <div class="ai-text"   id="aiTranscript"></div>
+  <div class="settings-section">
+    <div class="section-label">🔊 Audio</div>
+    <div class="setting-row">
+      <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
+      <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label-text">Silent When Safe</div><div class="setting-desc">Don't speak on clear path</div></div>
+      <label class="toggle"><input type="checkbox" id="silentSafe" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="setting-row" style="border:none">
+      <div><div class="setting-label-text">ElevenLabs Voice</div><div class="setting-desc">Natural AI voice</div></div>
+      <label class="toggle"><input type="checkbox" id="useEleven"><span class="toggle-slider"></span></label>
+    </div>
+    <input class="settings-input" id="elevenKey" type="password" placeholder="ElevenLabs API key (optional)">
   </div>
-  <button class="btn-close-voice" id="btnCloseVoice" onclick="void(0)">✕ Close</button>
+
+  <div class="settings-section">
+    <div class="section-label">📡 Haptic Legend</div>
+    <div class="legend-row"><div class="legend-pattern">·</div><div class="legend-desc">Warning — obstacle nearby</div></div>
+    <div class="legend-row"><div class="legend-pattern">···</div><div class="legend-desc">Urgent — immediate hazard</div></div>
+    <div class="legend-row"><div class="legend-pattern">——</div><div class="legend-desc">Navigation turn coming up</div></div>
+    <div class="legend-row"><div class="legend-pattern">————</div><div class="legend-desc">Destination reached</div></div>
+  </div>
 </div>
 
 <script>
@@ -372,77 +441,47 @@
     try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
   }, { once: true });
 
-  // ── TABS ─────────────────────────────────────────────────────
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('page-' + tab.dataset.tab).classList.add('active');
-    });
-  });
-
   // ── CONFIG ───────────────────────────────────────────────────
-  const BACKEND  = 'https://smelting-unleaded-plow.ngrok-free.dev';
-  let stream     = null;
+  const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
+  const WAKE_WORDS = ['hey birdbox', 'hey bird box', 'birdbox', 'bird box'];
+  let stream       = null;
   let scanInterval = null;
-  let facingMode = 'environment';
-  let intervalMs = 2500;
-  let frameCount = 0;
+  let facingMode   = 'environment';
+  let intervalMs   = 2500;
+  let frameCount   = 0;
   let userLocation = null;
+  let wakeListening = false;
+  let commandMode   = false;
 
   // ── DOM ──────────────────────────────────────────────────────
-  const video        = document.getElementById('video');
-  const canvas       = document.getElementById('canvas');
-  const ctx          = canvas.getContext('2d');
-  const btnStart     = document.getElementById('btnStart');
-  const btnStop      = document.getElementById('btnStop');
-  const btnFlip      = document.getElementById('btnFlip');
-  const alertBox     = document.getElementById('alertOverlay');
-  const alertTypeEl  = document.getElementById('alertType');
-  const alertTextEl  = document.getElementById('alertText');
-  const alertTimeEl  = document.getElementById('alertTime');
-  const statusDot    = document.getElementById('statusDot');
-  const statusTxt    = document.getElementById('statusText');
-  const scanLine     = document.getElementById('scanLine');
-  const noCam        = document.getElementById('noCam');
-  const frameCountEl = document.getElementById('frameCount');
-  const voiceFab     = document.getElementById('voiceFab');
-  const voiceOverlay = document.getElementById('voiceOverlay');
-  const voiceOrb     = document.getElementById('voiceOrb');
-  const voiceStatusText = document.getElementById('voiceStatusText');
+  const video           = document.getElementById('video');
+  const canvas          = document.getElementById('canvas');
+  const ctx             = canvas.getContext('2d');
+  const btnStart        = document.getElementById('btnStart');
+  const btnStop         = document.getElementById('btnStop');
+  const btnFlip         = document.getElementById('btnFlip');
+  const alertBox        = document.getElementById('alertBox');
+  const alertTypeEl     = document.getElementById('alertType');
+  const alertMsgEl      = document.getElementById('alertMsg');
+  const alertTimeEl     = document.getElementById('alertTime');
+  const statusPill      = document.getElementById('statusPill');
+  const scanLine        = document.getElementById('scanLine');
+  const noCam           = document.getElementById('noCam');
+  const frameCountEl    = document.getElementById('frameCount');
+  const glowBorder      = document.getElementById('glowBorder');
+  const wakeIndicator   = document.getElementById('wakeIndicator');
+  const voiceBox        = document.getElementById('voiceBox');
   const userTranscript  = document.getElementById('userTranscript');
   const aiTranscript    = document.getElementById('aiTranscript');
 
-  // ── AUTO REQUEST LOCATION ────────────────────────────────────
-  function initLocation() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        userLocation = { lat, lng };
-        // push to dashboard
-        fetch(`${BACKEND}/location/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lat, lng, level: 'safe', message: 'Location acquired' })
-        }).catch(() => {});
-      },
-      () => console.log('Location denied'),
-      { enableHighAccuracy: true }
-    );
-    // keep updating location every 10 seconds
-    setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
-        () => {},
-        { enableHighAccuracy: true }
-      );
-    }, 10000);
-  }
-  initLocation();
+  // ── SETTINGS ─────────────────────────────────────────────────
+  document.getElementById('btnSettings').addEventListener('click', () => {
+    document.getElementById('settingsOverlay').classList.add('visible');
+  });
+  document.getElementById('btnCloseSettings').addEventListener('click', () => {
+    document.getElementById('settingsOverlay').classList.remove('visible');
+  });
 
-  // ── INTERVAL PILLS ───────────────────────────────────────────
   document.querySelectorAll('.ipill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.ipill').forEach(p => p.classList.remove('active'));
@@ -450,6 +489,25 @@
       intervalMs = parseInt(pill.dataset.val);
     });
   });
+
+  // ── AUTO LOCATION ────────────────────────────────────────────
+  function initLocation() {
+    if (!navigator.geolocation) return;
+    const update = () => navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        fetch(`${BACKEND}/location/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+          body: JSON.stringify({ ...userLocation, level: 'safe', message: 'Location acquired' })
+        }).catch(() => {});
+      },
+      () => {}, { enableHighAccuracy: true }
+    );
+    update();
+    setInterval(update, 10000);
+  }
+  initLocation();
 
   // ── CAMERA ───────────────────────────────────────────────────
   async function startCamera() {
@@ -462,8 +520,8 @@
       video.srcObject = stream;
       noCam.style.display = 'none';
       return true;
-    } catch (e) {
-      showAlert('urgent', 'Camera access denied. Please allow camera permission.');
+    } catch {
+      showAlert('urgent', 'Camera access denied.');
       return false;
     }
   }
@@ -486,22 +544,22 @@
     return small.toDataURL('image/jpeg', 0.7).split(',')[1];
   }
 
-  // ── ANALYZE via backend ──────────────────────────────────────
+  // ── ANALYZE ──────────────────────────────────────────────────
   async function analyzeFrame(b64) {
     const res = await fetch(`${BACKEND}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
       body: JSON.stringify({ image: b64 })
     });
-    if (!res.ok) throw new Error(`Backend error ${res.status}`);
+    if (!res.ok) throw new Error(`${res.status}`);
     return await res.json();
   }
 
   // ── HAPTIC ───────────────────────────────────────────────────
   function vibrate(pattern) {
     if (!navigator.vibrate) return;
-    const patterns = { single:[150], triple:[100,80,100,80,100], long:[600], nav:[400,100,400], arrived:[1000] };
-    navigator.vibrate(patterns[pattern] || [150]);
+    const p = { single:[150], triple:[100,80,100,80,100], long:[600], nav:[400,100,400], arrived:[1000] };
+    navigator.vibrate(p[pattern] || [150]);
   }
 
   function hapticForLevel(level) {
@@ -533,24 +591,32 @@
   }
 
   // ── UI HELPERS ───────────────────────────────────────────────
-  function showAlert(level, message) {
-    alertBox.className      = `alert-overlay visible ${level}`;
-    alertTypeEl.textContent = level.toUpperCase();
-    alertTextEl.textContent = message;
-    alertTimeEl.textContent = new Date().toLocaleTimeString();
+  function setGlow(state) {
+    glowBorder.className = state;
   }
 
-  function setStatus(state) {
-    const labels = { '': 'OFFLINE', active: 'LIVE', scanning: 'SCANNING' };
-    statusDot.className   = 'status-dot ' + state;
-    statusTxt.className   = 'status-text ' + state;
-    statusTxt.textContent = labels[state] || state.toUpperCase();
+  function setStatus(state, label) {
+    statusPill.className   = 'status-pill ' + state;
+    statusPill.textContent = label || state.toUpperCase();
+  }
+
+  function showAlert(level, message) {
+    alertBox.className      = `visible ${level}`;
+    alertTypeEl.textContent = level.toUpperCase();
+    alertMsgEl.textContent  = message;
+    alertTimeEl.textContent = new Date().toLocaleTimeString();
+    if (level === 'urgent')  setGlow('urgent');
+    else if (level === 'warning') setGlow('warning');
+    else setGlow('idle');
+    // auto clear glow after 3s for non-urgent
+    if (level !== 'urgent') setTimeout(() => { if (!commandMode) setGlow('idle'); }, 3000);
   }
 
   // ── SCAN LOOP ────────────────────────────────────────────────
   async function doScan() {
+    if (commandMode) return; // pause scanning while voice is active
     scanLine.classList.add('running');
-    setStatus('scanning');
+    setStatus('scanning', 'SCANNING');
     try {
       const b64    = captureFrame();
       const result = await analyzeFrame(b64);
@@ -571,7 +637,7 @@
       showAlert('urgent', `Error: ${e.message}`);
     } finally {
       scanLine.classList.remove('running');
-      setStatus('active');
+      setStatus('active', 'LIVE');
     }
   }
 
@@ -580,8 +646,9 @@
     if (!ok) return;
     btnStart.style.display = 'none';
     btnStop.style.display  = 'flex';
-    setStatus('active');
-    showAlert('safe', 'Camera active. Scanning for obstacles...');
+    setStatus('active', 'LIVE');
+    showAlert('safe', 'Camera active. Say "Hey BirdBox" for voice commands.');
+    startWakeWordListening();
     await doScan();
     scanInterval = setInterval(doScan, intervalMs);
   });
@@ -593,79 +660,119 @@
     noCam.style.display    = 'flex';
     btnStop.style.display  = 'none';
     btnStart.style.display = 'flex';
-    setStatus('');
-    alertBox.classList.remove('visible');
+    setStatus('', 'OFFLINE');
+    setGlow('idle');
+    alertBox.className = '';
     scanLine.classList.remove('running');
     window.speechSynthesis?.cancel();
+    stopWakeWordListening();
   });
 
-  // ── VOICE OVERLAY ────────────────────────────────────────────
-  voiceFab.addEventListener('click', () => {
-    voiceOverlay.classList.add('visible');
-    userTranscript.textContent = '';
-    aiTranscript.textContent   = '';
-    voiceStatusText.textContent = 'HOLD ORB TO TALK';
-    voiceStatusText.className   = 'voice-status-text';
-    voiceOrb.className          = 'voice-orb';
-    voiceOrb.textContent        = '🎤';
-  });
+  // ── WAKE WORD LISTENING ──────────────────────────────────────
+  let wakeRecognition = null;
 
-  document.getElementById('btnCloseVoice').addEventListener('click', () => {
-    voiceOverlay.classList.remove('visible');
-    if (recognition && isListening) recognition.stop();
-    window.speechSynthesis?.cancel();
-  });
+  function startWakeWordListening() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return;
+    if (wakeListening) return;
 
-  // ── SPEECH RECOGNITION ───────────────────────────────────────
-  let recognition = null;
-  let isListening = false;
-
-  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SR();
-    recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
+    wakeRecognition = new SR();
+    wakeRecognition.continuous     = true;
+    wakeRecognition.interimResults = true;
+    wakeRecognition.lang           = 'en-US';
 
-    recognition.onstart = () => {
-      isListening = true;
-      voiceOrb.className          = 'voice-orb listening';
-      voiceOrb.textContent        = '🎤';
-      voiceStatusText.className   = 'voice-status-text listening';
-      voiceStatusText.textContent = 'LISTENING...';
-      vibrate('single');
+    wakeRecognition.onstart = () => {
+      wakeListening = true;
+      wakeIndicator.classList.remove('hidden');
     };
-    recognition.onend = () => {
-      isListening = false;
-      if (!aiTranscript.textContent) {
-        voiceOrb.className          = 'voice-orb';
-        voiceStatusText.className   = 'voice-status-text';
-        voiceStatusText.textContent = 'HOLD ORB TO TALK';
+
+    wakeRecognition.onend = () => {
+      wakeListening = false;
+      // restart unless stopped intentionally
+      if (stream) setTimeout(startWakeWordListening, 500);
+    };
+
+    wakeRecognition.onresult = (e) => {
+      const transcript = Array.from(e.results)
+        .map(r => r[0].transcript.toLowerCase())
+        .join(' ');
+
+      const detected = WAKE_WORDS.some(w => transcript.includes(w));
+      if (detected && !commandMode) {
+        wakeRecognition.stop();
+        wakeListening = false;
+        activateVoiceCommand();
       }
     };
-    recognition.onresult = async (e) => {
-      const text = e.results[0][0].transcript;
-      userTranscript.textContent  = `You: ${text}`;
-      aiTranscript.textContent    = 'Thinking...';
-      voiceOrb.className          = 'voice-orb speaking';
-      voiceOrb.textContent        = '💬';
-      voiceStatusText.className   = 'voice-status-text speaking';
-      voiceStatusText.textContent = 'RESPONDING...';
-      await handleVoiceCommand(text);
-      voiceOrb.className          = 'voice-orb';
-      voiceOrb.textContent        = '🎤';
-      voiceStatusText.className   = 'voice-status-text';
-      voiceStatusText.textContent = 'HOLD ORB TO TALK';
+
+    wakeRecognition.onerror = () => {
+      wakeListening = false;
+      if (stream) setTimeout(startWakeWordListening, 1000);
     };
-    recognition.onerror = (e) => {
-      voiceStatusText.textContent = 'Error: ' + e.error;
-    };
-  } else {
-    if (voiceStatusText) voiceStatusText.textContent = 'Use Chrome for voice.';
+
+    try { wakeRecognition.start(); } catch {}
   }
 
-  voiceOrb.addEventListener('mousedown',  () => { if (recognition && !isListening) recognition.start(); });
-  voiceOrb.addEventListener('touchstart', () => { if (recognition && !isListening) recognition.start(); }, { passive: true });
-  voiceOrb.addEventListener('mouseup',    () => { if (recognition && isListening)  recognition.stop(); });
-  voiceOrb.addEventListener('touchend',   () => { if (recognition && isListening)  recognition.stop(); });
+  function stopWakeWordListening() {
+    wakeListening = false;
+    wakeIndicator.classList.add('hidden');
+    if (wakeRecognition) { try { wakeRecognition.stop(); } catch {} }
+  }
+
+  // ── COMMAND MODE (after wake word) ───────────────────────────
+  function activateVoiceCommand() {
+    commandMode = true;
+    vibrate('single');
+    setGlow('listening');
+    setStatus('listening', 'LISTENING');
+    wakeIndicator.classList.add('hidden');
+    voiceBox.classList.add('visible');
+    userTranscript.textContent = '';
+    aiTranscript.textContent   = 'Listening...';
+
+    // play a chime
+    try {
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc  = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.connect(gain); gain.connect(actx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(.3, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .3);
+      osc.start(); osc.stop(actx.currentTime + .3);
+    } catch {}
+
+    // start command recognition
+    const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const cmd = new SR();
+    cmd.continuous = false; cmd.interimResults = false; cmd.lang = 'en-US';
+
+    cmd.onresult = async (e) => {
+      const text = e.results[0][0].transcript;
+      userTranscript.textContent = `You: ${text}`;
+      aiTranscript.textContent   = 'Thinking...';
+      setGlow('speaking');
+      setStatus('speaking', 'RESPONDING');
+      await handleVoiceCommand(text);
+      endCommandMode();
+    };
+
+    cmd.onerror = () => { endCommandMode(); };
+    cmd.onend   = () => { if (commandMode && !aiTranscript.textContent.startsWith('BirdBox')) endCommandMode(); };
+
+    setTimeout(() => { try { cmd.start(); } catch {} }, 200);
+  }
+
+  function endCommandMode() {
+    commandMode = false;
+    setGlow('idle');
+    setStatus('active', 'LIVE');
+    wakeIndicator.classList.remove('hidden');
+    setTimeout(() => {
+      voiceBox.classList.remove('visible');
+      startWakeWordListening();
+    }, 4000); // keep transcript visible for 4s
+  }
 
   // ── CLAUDE CHAT ──────────────────────────────────────────────
   async function handleVoiceCommand(text) {
@@ -678,21 +785,22 @@
       const data  = await res.json();
       const reply = data.reply;
       aiTranscript.textContent = `BirdBox: ${reply}`;
-      speak(reply);
+      await speak(reply);
 
       // navigation intent
       if (/take me|navigate|go to|find/i.test(text) && userLocation) {
         const match = text.match(/(?:to|find|navigate to|go to)\s+(.+)/i);
         if (match) {
           const { lat, lng } = userLocation;
-          const places = await fetch(`${BACKEND}/places/nearby?lat=${lat}&lng=${lng}&query=${encodeURIComponent(match[1])}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
-          }).then(r => r.json());
+          const places = await fetch(
+            `${BACKEND}/places/nearby?lat=${lat}&lng=${lng}&query=${encodeURIComponent(match[1])}`,
+            { headers: { 'ngrok-skip-browser-warning': 'true' } }
+          ).then(r => r.json());
           if (places?.places?.length) {
             const opts = places.places.map((p, i) => `Option ${i+1}: ${p.name}`).join('. ');
-            const msg  = `Found ${places.places.length} options. ${opts}. Which do you prefer?`;
+            const msg  = `Found ${places.places.length} nearby. ${opts}. Which do you prefer?`;
             aiTranscript.textContent = `BirdBox: ${msg}`;
-            speak(msg);
+            await speak(msg);
           }
         }
       }
