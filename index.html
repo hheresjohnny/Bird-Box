@@ -266,6 +266,12 @@
   // ── iOS unlock ───────────────────────────────────────────────
   document.addEventListener('touchstart', () => {
     try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
+    // iOS Safari requires a silent utterance to unlock speechSynthesis
+    try {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    } catch {}
   }, { once: true, passive: true });
 
   // ── CONFIG ───────────────────────────────────────────────────
@@ -277,12 +283,7 @@
   function getAnthropicKey() {
     const fieldKey = document.getElementById('anthropicKey')?.value.trim();
     if (fieldKey) { localStorage.setItem('anthropic_key', fieldKey); return fieldKey; }
-    let key = localStorage.getItem('anthropic_key');
-    if (!key) {
-      key = prompt('Enter your Anthropic API key to enable BirdBox voice:');
-      if (key) localStorage.setItem('anthropic_key', key.trim());
-    }
-    return key;
+    return localStorage.getItem('anthropic_key') || null;
   }
 
   let stream       = null;
@@ -332,10 +333,18 @@
   const navStepDistEl  = document.getElementById('navStepDist');
 
   // ── SETTINGS ─────────────────────────────────────────────────
-  document.getElementById('btnSettings').addEventListener('click', () =>
-    document.getElementById('settingsOverlay').classList.add('visible'));
-  document.getElementById('btnCloseSettings').addEventListener('click', () =>
-    document.getElementById('settingsOverlay').classList.remove('visible'));
+  document.getElementById('btnSettings').addEventListener('click', () => {
+    // pre-fill saved key so user can see it's stored
+    const saved = localStorage.getItem('anthropic_key');
+    if (saved) document.getElementById('anthropicKey').value = saved;
+    document.getElementById('settingsOverlay').classList.add('visible');
+  });
+  document.getElementById('btnCloseSettings').addEventListener('click', () => {
+    // save key on close
+    const k = document.getElementById('anthropicKey').value.trim();
+    if (k) localStorage.setItem('anthropic_key', k);
+    document.getElementById('settingsOverlay').classList.remove('visible');
+  });
   document.querySelectorAll('.ipill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.ipill').forEach(p => p.classList.remove('active'));
@@ -560,9 +569,15 @@
   }
 
   btnStart.addEventListener('click', async () => {
+    // iOS Safari: unlock speech on user gesture
+    try {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    } catch {}
     const ok = await startCamera();
     if (!ok) return;
-    setTimeout(initLocation, 800); // iOS Safari: wait for camera dialog to close first
+    setTimeout(initLocation, 800);
     btnStart.style.display = 'none';
     btnStop.style.display  = 'flex';
     setStatus('active', 'LIVE');
