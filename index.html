@@ -249,28 +249,28 @@ const VOICES = [
     id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', emoji: '👩',
     tag: 'Female · Soft & Gentle',
     desc: 'Warm and soothing. Low-stress alerts.',
-    preview: "Hi, I'm Bella. Caution — there is a bicycle approaching on your left.",
+    preview: "Hello, I'm Bella.",
     settings: { stability: 0.60, similarity_boost: 0.75, style: 0.25 }
   },
   {
     id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', emoji: '👩',
     tag: 'Female · Bright & Energetic',
     desc: 'Upbeat and lively. Keeps you alert.',
-    preview: "Hi, I'm Lily! Turn right in 20 meters — just past the intersection!",
+    preview: "Hello, I'm Lily.",
     settings: { stability: 0.45, similarity_boost: 0.85, style: 0.40 }
   },
   {
     id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', emoji: '👨',
     tag: 'Male · Deep & Authoritative',
     desc: 'Bold and commanding. Clear warnings.',
-    preview: "Hi, I'm Adam. Warning — steps detected directly in your path.",
+    preview: "Hello, I'm Adam.",
     settings: { stability: 0.82, similarity_boost: 0.88, style: 0.05 }
   },
   {
     id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', emoji: '👨',
     tag: 'Male · Crisp & Direct',
     desc: 'Sharp and precise. Fast, clear alerts.',
-    preview: "Hi, I'm Arnold. Stop immediately — vehicle crossing your path ahead.",
+    preview: "Hello, I'm Arnold.",
     settings: { stability: 0.68, similarity_boost: 0.80, style: 0.18 }
   }
 ];
@@ -532,13 +532,15 @@ function processQueue() {
   }).then(res => {
     if (!res.ok) { console.error('TTS failed:', res.status); return Promise.reject(); }
     return res.blob();
-  }).then(blob => {
+  }).then(async blob => {
     const url   = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.volume = 1.0;
-    // use a fresh AudioContext per element — reusing one causes createMediaElementSource to throw
+
+    // resume AudioContext first — required on iOS/Android after page load
     try {
-      const actx   = new (window.AudioContext || window.webkitAudioContext)();
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      await actx.resume();
       const source = actx.createMediaElementSource(audio);
       const gain   = actx.createGain();
       gain.gain.value = 3.0;
@@ -547,11 +549,19 @@ function processQueue() {
       audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); actx.close(); };
       audio.onerror = () => { actx.close(); speakBrowser(text, () => { resolve(); processQueue(); }); };
     } catch(e) {
-      console.warn('Gain boost failed, playing normally:', e);
+      // gain boost failed — still play without it
       audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); };
       audio.onerror = () => { speakBrowser(text, () => { resolve(); processQueue(); }); };
     }
-    audio.play().catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
+
+    try {
+      await audio.play();
+    } catch(e) {
+      // play() blocked — fall back to browser voice
+      console.warn('ElevenLabs play blocked, using browser voice:', e.message);
+      URL.revokeObjectURL(url);
+      speakBrowser(text, () => { resolve(); processQueue(); });
+    }
   }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
 }
 
@@ -659,10 +669,16 @@ function endCommand() {
 async function handleVoiceCommand(text) {
   const lower = text.toLowerCase();
 
-  // navigation intent
-  const navMatch = lower.match(/(?:take me to|navigate to|go to|directions to|direct me to|bring me to|find|get me to|walk me to|lead me to|i want to go to|how do i get to)\s+(.+)/i);
+  // navigation intent — catches: "nearest burger king", "closest pharmacy",
+  // "where is the library", "find me a coffee shop", "take me to subway", etc.
+  const navMatch = lower.match(
+    /(?:take me to|navigate to|go to|directions to|direct me to|bring me to|get me to|walk me to|lead me to|i want to go to|how do i get to|find me (?:a |an |the )?|find (?:a |an |the )?|nearest |closest |where is (?:the |a |an )?|where('s| is) (?:the |a |an )?|i need (?:a |an |the )?)\s*(.+)/i
+  );
   if (navMatch) {
-    const query = navMatch[1].trim();
+    // last capture group has the place name
+    const query = (navMatch[2] || navMatch[1] || '').trim().replace(/\?+$/, '');
+    if (!query) { await speak('What place are you looking for?'); return; }
+
     aiTranscript.textContent=`BirdBox: Getting your location...`;
 
     // get fresh GPS position before searching
