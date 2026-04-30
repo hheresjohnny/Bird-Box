@@ -568,30 +568,31 @@
 
   document.querySelectorAll('.haptic-option[data-voice-id]').forEach(opt => {
     opt.addEventListener('click', async () => {
-      // select it
+      // select it first
       document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       selectedVoiceId = opt.dataset.voiceId;
-      const name = opt.dataset.voiceName;
+      const name      = opt.dataset.voiceName;
+      const voiceId   = opt.dataset.voiceId; // capture locally so it's definitely correct
 
       // stop any previous preview
       if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+      window.speechSynthesis.cancel();
 
-      const status = document.getElementById('voicePreviewStatus');
+      const status    = document.getElementById('voicePreviewStatus');
       const elevenKey = document.getElementById('elevenKey').value.trim();
 
+      // always try browser TTS first as immediate feedback
+      status.textContent = elevenKey ? `Loading ${name}'s voice…` : `Playing preview…`;
+
       if (!elevenKey) {
-        // fallback: use browser TTS to preview
-        status.textContent = `Playing preview with browser voice…`;
         const utt = new SpeechSynthesisUtterance(`Hi, I'm ${name}. I'll be your BirdBox guide.`);
-        utt.onend = () => status.textContent = '';
-        window.speechSynthesis.cancel();
+        utt.onend = () => { status.textContent = `${name} selected ✓`; };
         window.speechSynthesis.speak(utt);
         return;
       }
 
-      // use ElevenLabs for preview
-      status.textContent = `Loading ${name}'s voice…`;
+      // ElevenLabs preview
       try {
         const res = await fetch(`${BACKEND}/tts`, {
           method: 'POST',
@@ -599,17 +600,21 @@
           body: JSON.stringify({
             text: `Hi, I'm ${name}. I'll be your BirdBox navigation guide.`,
             api_key: elevenKey,
-            voice_id: selectedVoiceId
+            voice_id: voiceId
           })
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(`${res.status}`);
         const blob = await res.blob();
         previewAudio = new Audio(URL.createObjectURL(blob));
         previewAudio.onended = () => { status.textContent = `${name} selected ✓`; previewAudio = null; };
-        previewAudio.play();
+        await previewAudio.play();
         status.textContent = `Playing ${name}…`;
-      } catch {
-        status.textContent = `Preview failed — add ElevenLabs key in settings`;
+      } catch (e) {
+        // fall back to browser TTS if ElevenLabs fails
+        status.textContent = `Using browser voice for ${name}…`;
+        const utt = new SpeechSynthesisUtterance(`Hi, I'm ${name}. I'll be your BirdBox guide.`);
+        utt.onend = () => { status.textContent = `${name} selected ✓`; };
+        window.speechSynthesis.speak(utt);
       }
     });
   });
