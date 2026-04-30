@@ -393,6 +393,10 @@ function buildVoiceGrid() {
 }
 
 async function previewVoice(voiceId) {
+  // unlock audio on user gesture first
+  try { getHapticCtx(); } catch {}
+  try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
+
   document.querySelectorAll('.voice-card').forEach(c => c.classList.toggle('active', c.dataset.voiceId === voiceId));
   selectedVoiceId = voiceId;
   localStorage.setItem('voice_id', voiceId);
@@ -415,17 +419,25 @@ async function previewVoice(voiceId) {
       throw new Error(`${res.status}: ${err}`);
     }
     const blob = await res.blob();
-    previewAudio = new Audio(URL.createObjectURL(blob));
-    previewAudio.onended = () => { status.textContent = `${voice.name} selected ✓`; previewAudio = null; };
-    previewAudio.onerror = (e) => { status.textContent = `Audio error — using browser voice`; speakBrowser(voice.preview, ()=>{}); };
-    await previewAudio.play();
-    status.textContent = `Playing ${voice.name}…`;
+    const url  = URL.createObjectURL(blob);
+    previewAudio = new Audio(url);
+    previewAudio.onended = () => { status.textContent = `${voice.name} selected ✓`; previewAudio = null; URL.revokeObjectURL(url); };
+    previewAudio.onerror = () => { status.textContent = `Audio error — using browser voice`; speakBrowser(voice.preview, ()=>{}); };
+    const playPromise = previewAudio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => { status.textContent = `Playing ${voice.name}…`; })
+        .catch(e => {
+          console.error('Play blocked:', e);
+          status.textContent = `Tap again to play ${voice.name}`;
+          // second attempt via speakBrowser as fallback
+          speakBrowser(voice.preview, () => { status.textContent = `${voice.name} selected ✓`; });
+        });
+    }
   } catch(e) {
     console.error('TTS error:', e);
-    status.textContent = `Backend unavailable — using browser voice`;
-    const utt = new SpeechSynthesisUtterance(voice.preview);
-    utt.onend = () => { status.textContent = `${voice.name} selected (browser voice)`; };
-    window.speechSynthesis.speak(utt);
+    status.textContent = `Backend error — using browser voice`;
+    speakBrowser(voice.preview, () => { status.textContent = `${voice.name} selected (browser voice)`; });
   }
 }
 
