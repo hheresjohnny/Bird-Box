@@ -592,22 +592,22 @@
         return;
       }
 
-      // ElevenLabs preview
+      // ElevenLabs preview — call directly, no backend needed
       try {
-        const res = await fetch(`${BACKEND}/tts`, {
+        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+          headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: `Hi, I'm ${name}. I'll be your BirdBox navigation guide.`,
-            api_key: elevenKey,
-            voice_id: voiceId
+            model_id: 'eleven_turbo_v2',
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
           })
         });
         if (!res.ok) throw new Error(`${res.status}`);
         const blob = await res.blob();
         previewAudio = new Audio(URL.createObjectURL(blob));
         previewAudio.onended = () => { status.textContent = `${name} selected ✓`; previewAudio = null; };
-        await previewAudio.play();
+        previewAudio.play();
         status.textContent = `Playing ${name}…`;
       } catch (e) {
         // fall back to browser TTS if ElevenLabs fails
@@ -636,10 +636,14 @@
     const elevenKey = document.getElementById('elevenKey').value.trim();
     const useEleven = document.getElementById('useEleven').checked;
     if (useEleven && elevenKey) {
-      fetch(`${BACKEND}/tts`, {
+      fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-        body: JSON.stringify({ text, api_key: elevenKey, voice_id: selectedVoiceId })
+        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_turbo_v2',
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+        })
       }).then(res => {
         if (res.ok) return res.blob();
         throw new Error();
