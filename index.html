@@ -310,10 +310,33 @@
   const NAV_THRESHOLD = 15;
 
   // API key stored in localStorage — never hardcoded
+  // ── LOAD SAVED SETTINGS ON STARTUP ───────────────────────────
+  (function loadSavedSettings() {
+    const ak = localStorage.getItem('anthropic_key');
+    const ek = localStorage.getItem('eleven_key');
+    const ue = localStorage.getItem('use_eleven') === 'true';
+    const vi = localStorage.getItem('voice_id');
+    if (ak) document.getElementById('anthropicKey').value = ak;
+    if (ek) document.getElementById('elevenKey').value    = ek;
+    document.getElementById('useEleven').checked = ue;
+    if (vi) {
+      selectedVoiceId = vi;
+      document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => {
+        o.classList.toggle('active', o.dataset.voiceId === vi);
+      });
+    }
+  })();
+
   function getAnthropicKey() {
     const fieldKey = document.getElementById('anthropicKey')?.value.trim();
     if (fieldKey) { localStorage.setItem('anthropic_key', fieldKey); return fieldKey; }
     return localStorage.getItem('anthropic_key') || null;
+  }
+
+  function getElevenKey() {
+    const fieldKey = document.getElementById('elevenKey')?.value.trim();
+    if (fieldKey) { localStorage.setItem('eleven_key', fieldKey); return fieldKey; }
+    return localStorage.getItem('eleven_key') || null;
   }
 
   let stream       = null;
@@ -364,15 +387,36 @@
 
   // ── SETTINGS ─────────────────────────────────────────────────
   document.getElementById('btnSettings').addEventListener('click', () => {
-    // pre-fill saved key so user can see it's stored
-    const saved = localStorage.getItem('anthropic_key');
-    if (saved) document.getElementById('anthropicKey').value = saved;
+    // restore all saved settings
+    const savedAnthropicKey = localStorage.getItem('anthropic_key');
+    const savedElevenKey    = localStorage.getItem('eleven_key');
+    const savedUseEleven    = localStorage.getItem('use_eleven') === 'true';
+    const savedVoiceId      = localStorage.getItem('voice_id');
+    const savedVoiceName    = localStorage.getItem('voice_name');
+
+    if (savedAnthropicKey) document.getElementById('anthropicKey').value = savedAnthropicKey;
+    if (savedElevenKey)    document.getElementById('elevenKey').value    = savedElevenKey;
+    document.getElementById('useEleven').checked = savedUseEleven;
+
+    // restore selected voice highlight
+    if (savedVoiceId) {
+      document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => {
+        o.classList.toggle('active', o.dataset.voiceId === savedVoiceId);
+      });
+      selectedVoiceId = savedVoiceId;
+    }
+
     document.getElementById('settingsOverlay').classList.add('visible');
   });
+
   document.getElementById('btnCloseSettings').addEventListener('click', () => {
-    // save key on close
-    const k = document.getElementById('anthropicKey').value.trim();
-    if (k) localStorage.setItem('anthropic_key', k);
+    // save all keys and preferences
+    const ak = document.getElementById('anthropicKey').value.trim();
+    const ek = document.getElementById('elevenKey').value.trim();
+    if (ak) localStorage.setItem('anthropic_key', ak);
+    if (ek) localStorage.setItem('eleven_key', ek);
+    localStorage.setItem('use_eleven', document.getElementById('useEleven').checked);
+    localStorage.setItem('voice_id',   selectedVoiceId);
     document.getElementById('settingsOverlay').classList.remove('visible');
   });
   document.querySelectorAll('.ipill').forEach(pill => {
@@ -407,10 +451,17 @@
             { headers: { 'ngrok-skip-browser-warning': 'true' } }
           );
           const geoData = await geo.json();
-          cachedAddress = geoData.address;
-          showAlert('safe', `📍 ${cachedAddress}`);
+          if (geoData.address && geoData.address !== 'Unknown location') {
+            cachedAddress = geoData.address;
+            showAlert('safe', `📍 ${cachedAddress}`);
+          } else {
+            // fallback to coordinates
+            cachedAddress = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+            showAlert('safe', `📍 GPS locked: ${cachedAddress}`);
+          }
         } catch {
-          showAlert('safe', `📍 GPS locked: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+          cachedAddress = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+          showAlert('safe', `📍 GPS locked: ${cachedAddress}`);
         }
         geoWatchId = navigator.geolocation.watchPosition(
           (pos) => {
@@ -580,7 +631,7 @@
       window.speechSynthesis.cancel();
 
       const status    = document.getElementById('voicePreviewStatus');
-      const elevenKey = document.getElementById('elevenKey').value.trim();
+      const elevenKey = getElevenKey();
 
       // always try browser TTS first as immediate feedback
       status.textContent = elevenKey ? `Loading ${name}'s voice…` : `Playing preview…`;
@@ -633,7 +684,7 @@
     if (!speakQueue.length) { isSpeaking = false; return; }
     isSpeaking = true;
     const { text, resolve } = speakQueue.shift();
-    const elevenKey = document.getElementById('elevenKey').value.trim();
+    const elevenKey = getElevenKey();
     const useEleven = document.getElementById('useEleven').checked;
     if (useEleven && elevenKey) {
       fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}/stream`, {
