@@ -91,7 +91,27 @@
   .bottom-btns { display: flex; gap: 10px; }
   .btn { flex: 1; padding: 18px; border: none; border-radius: 14px; font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: .02em; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; user-select: none; -webkit-user-select: none; min-height: 64px; cursor: pointer; backdrop-filter: blur(8px); }
   .btn:active { transform: scale(.96); }
-  .btn-start { background: var(--teal); color: var(--bg); }
+  .btn-start {
+    position: fixed;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #000;
+    font-size: 20px;
+    font-weight: 800;
+    border: none;
+    box-shadow: 0 0 0 12px rgba(0,232,122,.15), 0 0 0 24px rgba(0,232,122,.07), 0 8px 40px rgba(0,232,122,.4);
+    flex: none;
+    z-index: 15;
+    animation: pulse-start 2s ease-in-out infinite;
+  }
+  .btn-start:active { transform: translate(-50%, -50%) scale(.93); }
+  @keyframes pulse-start {
+    0%,100% { box-shadow: 0 0 0 12px rgba(0,232,122,.15), 0 0 0 24px rgba(0,232,122,.07), 0 8px 40px rgba(0,232,122,.4); }
+    50%      { box-shadow: 0 0 0 18px rgba(0,232,122,.20), 0 0 0 36px rgba(0,232,122,.09), 0 8px 60px rgba(0,232,122,.6); }
+  }
   .btn-stop  { background: rgba(255,69,69,.15); color: var(--red); border: 2px solid var(--red); }
   .btn-flip  { flex: 0 0 64px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); font-size: 22px; }
   .frame-count { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3); text-align: center; letter-spacing: .1em; margin-top: 8px; }
