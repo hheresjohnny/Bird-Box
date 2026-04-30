@@ -204,25 +204,6 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════
-// ROOT CAUSE (iPhone Safari specific):
-//
-// iOS suspends the AudioContext after ~30s of no audio output,
-// even if it was properly unlocked on a user gesture. When the
-// wake word fires, the context is suspended and decodeAudioData
-// either hangs or rejects, causing fallback to browser TTS.
-//
-// FIX 1: keepAlive() — plays a zero-gain silent buffer every 20s
-//         so iOS never considers the context idle.
-//
-// FIX 2: resumeActx() — every call to processQueue explicitly
-//         awaits actx.resume() before touching any audio, with a
-//         500ms timeout guard so a hung resume doesn't block forever.
-//
-// FIX 3: On resume failure, we recreate the AudioContext entirely
-//         and play again rather than falling back to browser TTS.
-// ════════════════════════════════════════════════════════════════
-
 const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
 const WAKE_WORDS = ['hey birdbox','hey bird box','birdbox','bird box','hey bird'];
 
@@ -232,11 +213,10 @@ const VOICES = [
   { id:'pNInz6obpgDQGcFmaJgB', name:'Adam',   emoji:'👨', tag:'Male · Deep & Authoritative', desc:'Bold and commanding.',    preview:"Hello, I'm Adam.",   settings:{stability:0.82,similarity_boost:0.88,style:0.05} },
   { id:'VR6AewLTigWG4xSOukaG', name:'Arnold', emoji:'👨', tag:'Male · Crisp & Direct',       desc:'Sharp and precise.',      preview:"Hello, I'm Arnold.", settings:{stability:0.68,similarity_boost:0.80,style:0.18} }
 ];
-const VALID_IDS   = VOICES.map(v => v.id);
-const savedVoice  = localStorage.getItem('voice_id');
+const VALID_IDS  = VOICES.map(v => v.id);
+const savedVoice = localStorage.getItem('voice_id');
 let selectedVoiceId = (savedVoice && VALID_IDS.includes(savedVoice)) ? savedVoice : 'pFZP5JQG7iQjIQuC4Bku';
 
-// ── STATE ─────────────────────────────────────────────────────
 let stream = null, scanInterval = null, facingMode = 'environment';
 let intervalMs = 4000, frameCount = 0, userLocation = null;
 let commandMode = false, wakeActive = false, wakeRecog = null;
@@ -246,7 +226,6 @@ let navDest = null, navDestName = '', lastAnnouncedStep = -1;
 let geoWatchId = null, cachedAddress = null;
 const conversationHistory = [];
 
-// ── DOM ───────────────────────────────────────────────────────
 const video          = document.getElementById('video');
 const canvas         = document.getElementById('canvas');
 const ctx            = canvas.getContext('2d');
@@ -272,11 +251,8 @@ const navTotalEl     = document.getElementById('navTotal');
 const navStepEl      = document.getElementById('navStep');
 const navStepDistEl  = document.getElementById('navStepDist');
 
-// ══════════════════════════════════════════════════════════════
-// AUDIO CONTEXT — with iOS keep-alive
-// ══════════════════════════════════════════════════════════════
-let actx          = null;
-let keepAliveTimer = null;
+// ── AUDIO CONTEXT with iOS keep-alive ────────────────────────
+let actx = null, keepAliveTimer = null;
 
 function createActx() {
   actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -284,41 +260,33 @@ function createActx() {
   return actx;
 }
 
-// Resume with a timeout — if iOS hangs the resume promise, we
-// recreate the context rather than waiting forever.
 async function resumeActx() {
   if (!actx || actx.state === 'closed') createActx();
   if (actx.state === 'running') return true;
   try {
     await Promise.race([
       actx.resume(),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('resume timeout')), 500))
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 500))
     ]);
     return actx.state === 'running';
   } catch {
-    // Context is stuck — nuke it and make a fresh one
     try { actx.close(); } catch {}
     createActx();
     return actx.state === 'running';
   }
 }
 
-// Plays a truly silent (zero-gain) buffer every 20s.
-// This is the iOS keep-alive trick — keeps the context from suspending.
 function startKeepAlive() {
   stopKeepAlive();
   keepAliveTimer = setInterval(() => {
     if (!actx || actx.state === 'closed') return;
     try {
       if (actx.state === 'suspended') actx.resume();
-      const buf  = actx.createBuffer(1, 1, actx.sampleRate);
-      const src  = actx.createBufferSource();
+      const buf = actx.createBuffer(1, 1, actx.sampleRate);
+      const src = actx.createBufferSource();
       const gain = actx.createGain();
-      gain.gain.value = 0; // completely silent
-      src.buffer = buf;
-      src.connect(gain);
-      gain.connect(actx.destination);
-      src.start(0);
+      gain.gain.value = 0;
+      src.buffer = buf; src.connect(gain); gain.connect(actx.destination); src.start(0);
     } catch {}
   }, 20000);
 }
@@ -328,26 +296,18 @@ function stopKeepAlive() {
 }
 
 function unlockAudio() {
-  if (actx) return; // already created
+  if (actx) return;
   createActx();
-  // play 1 frame of silence to fully unlock on iOS
   try {
     const buf = actx.createBuffer(1, 1, actx.sampleRate);
     const src = actx.createBufferSource();
-    src.buffer = buf;
-    src.connect(actx.destination);
-    src.start(0);
+    src.buffer = buf; src.connect(actx.destination); src.start(0);
   } catch {}
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
 }
 
-// ══════════════════════════════════════════════════════════════
-// SPEECH ENGINE
-// fetch MP3 → arrayBuffer → decodeAudioData → AudioBufferSourceNode
-// No HTMLMediaElement. resumeActx() called before every decode.
-// ══════════════════════════════════════════════════════════════
-let isSpeaking  = false;
-let currentSrc  = null;
+// ── SPEECH ENGINE ─────────────────────────────────────────────
+let isSpeaking = false, currentSrc = null;
 const speakQueue = [];
 
 function speak(text) {
@@ -362,49 +322,34 @@ async function processQueue() {
   isSpeaking = true;
   const { text, resolve } = speakQueue.shift();
   const voice = VOICES.find(v => v.id === selectedVoiceId) || VOICES[0];
-
   try {
-    // Step 1: fetch audio from ElevenLabs via backend
     const res = await fetch(`${BACKEND}/tts/stream`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-      body:    JSON.stringify({ text, voice_id: voice.id, voice_settings: voice.settings })
+      body: JSON.stringify({ text, voice_id: voice.id, voice_settings: voice.settings })
     });
     if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
     const arrayBuffer = await res.arrayBuffer();
-
-    // Step 2: ensure AudioContext is running BEFORE decode
-    // This is the critical fix for iOS — resume() must complete first
     await resumeActx();
-
-    // Step 3: decode
     const audioBuffer = await actx.decodeAudioData(arrayBuffer);
-
-    // Step 4: play via AudioBufferSourceNode (no HTMLMediaElement)
     await new Promise(done => {
-      const src  = actx.createBufferSource();
-      const gain = actx.createGain();
+      const src = actx.createBufferSource(), gain = actx.createGain();
       gain.gain.value = 1.5;
-      src.buffer = audioBuffer;
-      src.connect(gain);
-      gain.connect(actx.destination);
-      currentSrc  = src;
+      src.buffer = audioBuffer; src.connect(gain); gain.connect(actx.destination);
+      currentSrc = src;
       src.onended = () => { currentSrc = null; done(); };
       src.start(0);
     });
-
   } catch(e) {
-    console.warn('ElevenLabs failed, browser TTS fallback:', e.message);
+    console.warn('ElevenLabs failed, browser TTS:', e.message);
     await new Promise(done => speakBrowser(text, done));
   }
-
   resolve();
   processQueue();
 }
 
 function cancelSpeech() {
-  speakQueue.length = 0;
-  isSpeaking = false;
+  speakQueue.length = 0; isSpeaking = false;
   try { if (currentSrc) { currentSrc.stop(); currentSrc = null; } } catch {}
   try { window.speechSynthesis.cancel(); } catch {}
 }
@@ -439,16 +384,14 @@ async function previewVoice(voiceId) {
   selectedVoiceId = voiceId;
   localStorage.setItem('voice_id', voiceId);
   cancelSpeech();
-
-  const voice  = VOICES.find(v => v.id === voiceId);
+  const voice = VOICES.find(v => v.id === voiceId);
   const status = document.getElementById('voicePreviewStatus');
   status.textContent = `Loading ${voice.name}…`;
-
   try {
     const res = await fetch(`${BACKEND}/tts/stream`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-      body:    JSON.stringify({ text: voice.preview, voice_id: voiceId, voice_settings: voice.settings })
+      body: JSON.stringify({ text: voice.preview, voice_id: voiceId, voice_settings: voice.settings })
     });
     if (!res.ok) throw new Error(`${res.status}`);
     const arrayBuffer = await res.arrayBuffer();
@@ -487,9 +430,9 @@ function vibrateOnce(ms) {
   if (navigator.vibrate) { navigator.vibrate(ms); return; }
   if (!actx) return;
   try {
-    const sr=actx.sampleRate, len=Math.ceil(sr*.015), buf=actx.createBuffer(1,len,sr), d=buf.getChannelData(0);
+    const sr=actx.sampleRate,len=Math.ceil(sr*.015),buf=actx.createBuffer(1,len,sr),d=buf.getChannelData(0);
     for(let i=0;i<len;i++) d[i]=(i<len*.4?1:-.5)*Math.exp(-i/(sr*.003));
-    const src=actx.createBufferSource(), g=actx.createGain(); src.buffer=buf; g.gain.value=4;
+    const src=actx.createBufferSource(),g=actx.createGain(); src.buffer=buf; g.gain.value=4;
     src.connect(g); g.connect(actx.destination); src.start(actx.currentTime);
   } catch {}
 }
@@ -563,8 +506,8 @@ async function analyzeFrame(b64, signal) {
 }
 
 // ── UI ────────────────────────────────────────────────────────
-function setGlow(s)        { glowBorder.className=s; }
-function setStatus(s,lbl)  { statusPill.className='status-pill '+s; statusPill.textContent=lbl||s.toUpperCase(); }
+function setGlow(s)       { glowBorder.className=s; }
+function setStatus(s,lbl) { statusPill.className='status-pill '+s; statusPill.textContent=lbl||s.toUpperCase(); }
 function showAlert(level,message) {
   alertBox.className=`visible ${level}`; alertTypeEl.textContent=level.toUpperCase();
   alertMsgEl.textContent=message; alertTimeEl.textContent=new Date().toLocaleTimeString();
@@ -596,7 +539,7 @@ async function doScan() {
 
 // ── START / STOP ──────────────────────────────────────────────
 btnStart.addEventListener('click', async () => {
-  unlockAudio(); // creates AudioContext + keep-alive on this user gesture
+  unlockAudio();
   const ok=await startCamera(); if(!ok) return;
   initLocation();
   btnStart.style.display='none'; btnStop.style.display='flex';
@@ -642,6 +585,7 @@ function playChime(){
     });
   }catch{}
 }
+
 function activateCommand(){
   commandMode=true; if(scanAbort){scanAbort.abort();scanAbort=null;} cancelSpeech();
   vibrate('single'); playChime(); setGlow('listening'); setStatus('listening','LISTENING');
@@ -654,16 +598,20 @@ function activateCommand(){
   cmd.onend=()=>{ if(!gotResult) endCommand(); };
   setTimeout(()=>{ try{cmd.start();}catch{endCommand();} },300);
 }
+
 function endCommand(){
   commandMode=false;
   if(navActive){setGlow('navigating');setStatus('navigating','NAVIGATING');}
   else{setGlow('idle');setStatus('active','LIVE');}
+  // Always just return to wake-word listening — never auto-prompt the user
   setTimeout(()=>{ voiceBox.classList.remove('visible'); if(wakeActive) runWakeSession(); },5000);
 }
 
 // ── VOICE COMMAND HANDLER ─────────────────────────────────────
 async function handleVoiceCommand(text){
   const lower=text.toLowerCase();
+
+  // Navigation intent
   const navMatch=lower.match(/(?:take me to|navigate to|go to|directions to|direct me to|bring me to|get me to|walk me to|lead me to|i want to go to|how do i get to|find me (?:a |an |the )?|find (?:a |an |the )?|nearest |closest |where is (?:the |a |an )?|where('s| is) (?:the |a |an )?|i need (?:a |an |the )?)\s*(.+)/i);
   if(navMatch){
     const query=(navMatch[2]||navMatch[1]||'').trim().replace(/\?+$/,'');
@@ -671,7 +619,11 @@ async function handleVoiceCommand(text){
     aiTranscript.textContent='BirdBox: Getting your location...';
     const freshLocation=await new Promise(resolve=>{
       if(!navigator.geolocation){resolve(userLocation);return;}
-      navigator.geolocation.getCurrentPosition(pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),()=>resolve(userLocation),{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+      navigator.geolocation.getCurrentPosition(
+        pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+        ()=>resolve(userLocation),
+        {enableHighAccuracy:true,timeout:8000,maximumAge:0}
+      );
     });
     if(!freshLocation){await speak('I need your location first. Please enable GPS and try again.');return;}
     userLocation=freshLocation;
@@ -683,42 +635,51 @@ async function handleVoiceCommand(text){
       if(!data.places?.length){aiTranscript.textContent=`BirdBox: Sorry, couldn't find ${query} nearby.`;await speak(`Sorry, I couldn't find ${query} nearby.`);return;}
       window._navPlaces=data.places;
       aiTranscript.textContent=`BirdBox: ${data.speech}`;
+      // Speak the options then return to wake-word — user says "Hey BirdBox, option 1"
       await speak(data.speech);
-      setTimeout(()=>{if(!commandMode)listenForSelection();},500);
     }catch(e){console.error('Nav:',e);await speak('Sorry, there was an error searching for locations.');}
     return;
   }
+
+  // Option selection — user said "Hey BirdBox, option 1" etc
   if(window._navPlaces&&/option\s*[123]|first|second|third|one|two|three/i.test(lower)){
     let idx=0; if(/option\s*2|second|two/i.test(lower))idx=1; if(/option\s*3|third|three/i.test(lower))idx=2;
     const place=window._navPlaces[idx]; if(place){window._navPlaces=null;await startNavigation(place);return;}
   }
+
+  // Stop navigation
   if(/stop|cancel|end navigation/i.test(lower)){stopNavigation();await speak('Navigation stopped.');return;}
+
+  // General chat
   try{
     conversationHistory.push({role:'user',content:text});
     if(conversationHistory.length>10) conversationHistory.splice(0,2);
     const res=await fetch(`${BACKEND}/chat/stream`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,history:conversationHistory.slice(0,-1),location:userLocation?{lat:userLocation.lat,lng:userLocation.lng,address:cachedAddress}:null})});
     if(!res.ok){aiTranscript.textContent=`BirdBox: Error ${res.status}`;speakBrowser('Sorry, server error.',()=>{});return;}
     const reader=res.body.getReader(),decoder=new TextDecoder(); let reply='';
-    while(true){const{done,value}=await reader.read();if(done)break;for(const line of decoder.decode(value).split('\n')){if(!line.startsWith('data: '))continue;const d=line.slice(6).trim();if(d==='[DONE]')break;try{const j=JSON.parse(d);if(j.type==='content_block_delta'){reply+=j.delta?.text||'';aiTranscript.textContent=`BirdBox: ${reply}`;}}catch{}}}
+    while(true){
+      const{done,value}=await reader.read(); if(done)break;
+      for(const line of decoder.decode(value).split('\n')){
+        if(!line.startsWith('data: '))continue;
+        const d=line.slice(6).trim(); if(d==='[DONE]')break;
+        try{const j=JSON.parse(d);if(j.type==='content_block_delta'){reply+=j.delta?.text||'';aiTranscript.textContent=`BirdBox: ${reply}`;}}catch{}
+      }
+    }
     if(reply){
       conversationHistory.push({role:'assistant',content:reply.trim()});
       const navTrigger=reply.match(/starting navigation to (.+)/i);
-      if(navTrigger&&userLocation){const q=navTrigger[1].replace(/[.!?]$/,'').trim();await speak(reply.trim());setTimeout(async()=>{await handleVoiceCommand(`navigate to ${q}`);},300);return;}
+      if(navTrigger&&userLocation){
+        const q=navTrigger[1].replace(/[.!?]$/,'').trim();
+        await speak(reply.trim());
+        setTimeout(async()=>{await handleVoiceCommand(`navigate to ${q}`);},300);
+        return;
+      }
       await speak(reply.trim());
+      // Log to backend — fire and forget
       fetch(`${BACKEND}/chat`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,location:null,log_only:true,ai_response:reply.trim()})}).catch(()=>{});
-      if(reply.trim().endsWith('?')){setTimeout(()=>{if(!commandMode)listenForSelection();},500);}
+      // ── NO auto-prompt after questions — user says "Hey BirdBox" to reply
     }
   }catch(e){console.error('Chat:',e);await speak('Sorry, I could not connect to the server.');}
-}
-
-function listenForSelection(){
-  if(commandMode)return; commandMode=true; setGlow('listening'); setStatus('listening','LISTENING');
-  voiceBox.classList.add('visible'); userTranscript.textContent=''; aiTranscript.textContent='Say Option 1, 2, or 3...';
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,cmd=new SR();
-  cmd.continuous=false; cmd.interimResults=false; cmd.lang='en-US'; let got=false;
-  cmd.onresult=async e=>{got=true;const text=e.results[0][0].transcript;userTranscript.textContent=`You: ${text}`;setGlow('speaking');setStatus('speaking','RESPONDING');await handleVoiceCommand(text);endCommand();};
-  cmd.onerror=()=>{if(!got)endCommand();}; cmd.onend=()=>{if(!got)endCommand();};
-  setTimeout(()=>{try{cmd.start();}catch{endCommand();}},200);
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────
