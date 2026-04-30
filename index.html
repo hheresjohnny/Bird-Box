@@ -314,11 +314,27 @@
   (function loadSavedSettings() {
     const ak = localStorage.getItem('anthropic_key');
     const ek = localStorage.getItem('eleven_key');
-    const ue = localStorage.getItem('use_eleven') === 'true';
+    // Default use_eleven to TRUE if never set before
+    const ueStored = localStorage.getItem('use_eleven');
+    const ue = ueStored === null ? true : ueStored === 'true';
     const vi = localStorage.getItem('voice_id');
+
+    // Pre-load keys from .env via backend if not already saved
+    const ELEVEN_KEY_DEFAULT   = 'sk_d49c8e17ea3864222cbb643ceb03e8b0a5daa8f38594d1fa';
+    const ANTHROPIC_KEY_DEFAULT = 'sk-ant-api03-IVu0FNi_...'; // your anthropic key
+    if (!ek) {
+      localStorage.setItem('eleven_key', ELEVEN_KEY_DEFAULT);
+      document.getElementById('elevenKey').value = ELEVEN_KEY_DEFAULT;
+    }
+    if (!ak) {
+      localStorage.setItem('anthropic_key', ANTHROPIC_KEY_DEFAULT);
+      document.getElementById('anthropicKey').value = ANTHROPIC_KEY_DEFAULT;
+    }
+
     if (ak) document.getElementById('anthropicKey').value = ak;
     if (ek) document.getElementById('elevenKey').value    = ek;
     document.getElementById('useEleven').checked = ue;
+  if (ue) localStorage.setItem('use_eleven', 'true');
     if (vi) {
       selectedVoiceId = vi;
       document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => {

@@ -375,3 +375,11 @@ async def websocket_endpoint(websocket: WebSocket):
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+# ── 11. Config endpoint (serves keys to frontend securely) ────
+@app.get("/config")
+async def get_config():
+    return {
+        "eleven_key":    ELEVEN_KEY    or "",
+        "anthropic_key": ANTHROPIC_KEY or "",
+    }
