@@ -221,7 +221,7 @@
     </div>
   </div>
   <div class="settings-section">
-    <div class="section-label">🔔 Haptic Feedback</div>
+    <div class="section-label">🔔 Haptic Feedback <span style="font-size:9px;color:var(--muted2);text-transform:none;letter-spacing:0">(Android only — iOS blocks vibration in browsers)</span></div>
 
     <!-- Warning -->
     <div class="setting-row">
@@ -276,7 +276,7 @@
 
     <!-- Voice picker -->
     <div id="voicePicker" style="margin-top:10px">
-      <div class="setting-label-text" style="font-size:12px;margin-bottom:8px;color:var(--muted2)">Choose Voice</div>
+      <div class="setting-label-text" style="font-size:12px;margin-bottom:8px;color:var(--muted2)">Choose Voice — tap to preview</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <div class="haptic-option" data-voice-id="21m00Tcm4TlvDq8ikWAM" data-voice-name="Rachel">👩 Rachel<span class="haptic-hint">Female · Calm</span></div>
         <div class="haptic-option" data-voice-id="EXAVITQu4vr4xnSDxMaL" data-voice-name="Bella">👩 Bella<span class="haptic-hint">Female · Soft</span></div>
@@ -285,6 +285,7 @@
         <div class="haptic-option" data-voice-id="VR6AewLTigWG4xSOukaG" data-voice-name="Arnold">👨 Arnold<span class="haptic-hint">Male · Crisp</span></div>
         <div class="haptic-option" data-voice-id="TxGEqnHWrfWFTfGW9XjX" data-voice-name="Josh">👨 Josh<span class="haptic-hint">Male · Young</span></div>
       </div>
+      <div id="voicePreviewStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:8px;min-height:14px"></div>
     </div>
 
     <input class="settings-input" id="anthropicKey" type="password" placeholder="Anthropic API key (required for voice)" style="margin-top:8px">
@@ -562,13 +563,54 @@
   });
 
   // ── ELEVENLABS VOICE PICKER ───────────────────────────────────
-  let selectedVoiceId = 'pFZP5JQG7iQjIQuC4Bku'; // default: Lily
+  let selectedVoiceId   = 'pFZP5JQG7iQjIQuC4Bku';
+  let previewAudio      = null;
 
   document.querySelectorAll('.haptic-option[data-voice-id]').forEach(opt => {
-    opt.addEventListener('click', () => {
+    opt.addEventListener('click', async () => {
+      // select it
       document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       selectedVoiceId = opt.dataset.voiceId;
+      const name = opt.dataset.voiceName;
+
+      // stop any previous preview
+      if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+
+      const status = document.getElementById('voicePreviewStatus');
+      const elevenKey = document.getElementById('elevenKey').value.trim();
+
+      if (!elevenKey) {
+        // fallback: use browser TTS to preview
+        status.textContent = `Playing preview with browser voice…`;
+        const utt = new SpeechSynthesisUtterance(`Hi, I'm ${name}. I'll be your BirdBox guide.`);
+        utt.onend = () => status.textContent = '';
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utt);
+        return;
+      }
+
+      // use ElevenLabs for preview
+      status.textContent = `Loading ${name}'s voice…`;
+      try {
+        const res = await fetch(`${BACKEND}/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+          body: JSON.stringify({
+            text: `Hi, I'm ${name}. I'll be your BirdBox navigation guide.`,
+            api_key: elevenKey,
+            voice_id: selectedVoiceId
+          })
+        });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        previewAudio = new Audio(URL.createObjectURL(blob));
+        previewAudio.onended = () => { status.textContent = `${name} selected ✓`; previewAudio = null; };
+        previewAudio.play();
+        status.textContent = `Playing ${name}…`;
+      } catch {
+        status.textContent = `Preview failed — add ElevenLabs key in settings`;
+      }
     });
   });
 
