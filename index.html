@@ -27,9 +27,8 @@
   #video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
   canvas { display: none; }
 
-  /* ── GLOW BORDER ── */
   #glowBorder { position: fixed; inset: 0; z-index: 10; pointer-events: none; transition: box-shadow .4s; }
-  #glowBorder.idle     { box-shadow: none; }
+  #glowBorder.idle      { box-shadow: none; }
   #glowBorder.listening { box-shadow: inset 0 0 60px 8px rgba(0,229,200,.6), inset 0 0 120px 20px rgba(0,229,200,.2); animation: glow-teal 1.2s ease-in-out infinite; }
   #glowBorder.speaking  { box-shadow: inset 0 0 60px 8px rgba(255,176,32,.6), inset 0 0 120px 20px rgba(255,176,32,.2); animation: glow-amber .8s ease-in-out infinite; }
   #glowBorder.urgent    { box-shadow: inset 0 0 80px 12px rgba(255,69,69,.8), inset 0 0 160px 30px rgba(255,69,69,.3); animation: glow-red .4s ease-in-out infinite; }
@@ -44,7 +43,6 @@
   #scanLine.running { opacity: .4; animation: scan 2s ease-in-out infinite; }
   @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:.4} 90%{opacity:.4} 100%{top:95%;opacity:0} }
 
-  /* ── TOP BAR ── */
   #topBar { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding: 48px 20px 16px; background: linear-gradient(to bottom, rgba(8,12,12,.85), transparent); display: flex; align-items: center; justify-content: space-between; }
   .logo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--teal); }
   .logo span { color: #fff; }
@@ -57,17 +55,10 @@
   .status-pill.navigating { color: var(--green); border-color: var(--green); background: rgba(0,232,122,.1); }
   .btn-settings { width: 40px; height: 40px; border-radius: 50%; background: rgba(8,12,12,.6); border: 1px solid var(--border); color: var(--muted); font-size: 18px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); cursor: pointer; }
 
-  /* ── WAKE HINT ── */
   #wakeHint { position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%); z-index: 20; font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: rgba(0,229,200,.6); text-align: center; pointer-events: none; transition: opacity 1s ease; white-space: nowrap; }
   #wakeHint.hidden { opacity: 0; }
 
-  /* ── NAV BAR ── */
-  #navBar {
-    position: fixed; top: 110px; left: 12px; right: 12px; z-index: 20;
-    background: rgba(8,12,12,.92); border: 1px solid var(--green);
-    border-radius: 12px; padding: 14px 16px; backdrop-filter: blur(8px);
-    display: none; animation: slide-down .3s ease;
-  }
+  #navBar { position: fixed; top: 110px; left: 12px; right: 12px; z-index: 20; background: rgba(8,12,12,.92); border: 1px solid var(--green); border-radius: 12px; padding: 14px 16px; backdrop-filter: blur(8px); display: none; animation: slide-down .3s ease; }
   #navBar.visible { display: block; }
   @keyframes slide-down { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
   .nav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -77,7 +68,6 @@
   .nav-step-dist { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
   .btn-stop-nav { padding: 6px 12px; border-radius: 6px; background: rgba(255,69,69,.15); border: 1px solid var(--red); color: var(--red); font-family: var(--mono); font-size: 10px; cursor: pointer; }
 
-  /* ── BOTTOM HUD ── */
   #bottomHud { position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; padding: 16px 16px 44px; background: linear-gradient(to top, rgba(8,12,12,.9), transparent); }
 
   #alertBox { background: rgba(8,12,12,.88); border: 1px solid var(--border); border-left: 4px solid var(--teal); border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(8px); margin-bottom: 12px; display: none; animation: slide-up .25s ease; }
@@ -110,7 +100,6 @@
   #noCam .icon { font-size: 4rem; opacity: .4; }
   #noCam p { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.7; }
 
-  /* ── SETTINGS ── */
   #settingsOverlay { position: fixed; inset: 0; z-index: 100; background: rgba(8,12,12,.97); backdrop-filter: blur(12px); display: none; flex-direction: column; overflow-y: auto; padding: 60px 16px 40px; gap: 14px; }
   #settingsOverlay.visible { display: flex; }
   .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -122,9 +111,6 @@
   .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
   .setting-label-text { font-size: 15px; font-weight: 600; color: var(--text); }
   .setting-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
-  .haptic-demo { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .haptic-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 11px; cursor: pointer; }
-  .haptic-btn:active { background: var(--teal-dim); border-color: var(--teal); }
   .haptic-picker { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 4px; }
   .haptic-option { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); font-family: var(--mono); font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all .15s; user-select: none; -webkit-user-select: none; }
   .haptic-option:active { transform: scale(.96); }
@@ -136,18 +122,22 @@
   .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: .2s; }
   .toggle input:checked + .toggle-slider { background: var(--teal-dim); border: 1px solid var(--teal); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--teal); }
-  .settings-input { width: 100%; margin-top: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none; }
-  .settings-input:focus { border-color: var(--teal); }
-  .settings-input::placeholder { color: var(--muted); }
   .interval-row { display: flex; align-items: center; justify-content: space-between; }
   .interval-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
   .interval-pills { display: flex; gap: 6px; }
   .ipill { padding: 8px 14px; border-radius: 99px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; }
   .ipill.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
-  .legend-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .legend-row:last-child { border-bottom: none; }
-  .legend-pattern { font-family: var(--mono); font-size: 13px; color: var(--teal); width: 64px; flex-shrink: 0; }
-  .legend-desc { font-size: 13px; color: var(--muted); }
+
+  /* Voice cards grid */
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .voice-card { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all .15s; }
+  .voice-card:active { transform: scale(.97); }
+  .voice-card.active { background: var(--teal-dim); border-color: var(--teal); }
+  .voice-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .voice-card-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .voice-card.active .voice-card-name { color: var(--teal); }
+  .voice-card-tag { font-family: var(--mono); font-size: 9px; color: var(--muted); line-height: 1.5; }
+  .voice-card-desc { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 3px; opacity: .7; }
 </style>
 </head>
 <body>
@@ -162,7 +152,6 @@
   <p>Tap START to begin.<br>Say "Hey BirdBox" for voice.</p>
 </div>
 
-<!-- TOP -->
 <div id="topBar">
   <div class="logo">Bird<span>Box</span></div>
   <div class="top-right">
@@ -171,16 +160,11 @@
   </div>
 </div>
 
-<!-- NAV BAR -->
 <div id="navBar">
   <div class="nav-header">
     <div class="nav-dest" id="navDest">Navigating...</div>
     <div class="nav-total" id="navTotal"></div>
-<<<<<<< HEAD
     <button class="btn-stop-nav" id="btnStopNav">✕ Stop</button>
-=======
-    <button class="btn-stop-nav" id="btnStopNav" onclick="void(0)">✕ Stop</button>
->>>>>>> d5a9b62231398f12fa03e594ec315940039d1658
   </div>
   <div class="nav-step" id="navStep">Loading directions...</div>
   <div class="nav-step-dist" id="navStepDist"></div>
@@ -188,7 +172,6 @@
 
 <div id="wakeHint">Say "Hey BirdBox"</div>
 
-<!-- BOTTOM -->
 <div id="bottomHud">
   <div id="voiceBox">
     <div class="voice-user" id="userTranscript"></div>
@@ -202,7 +185,7 @@
   <div class="bottom-btns">
     <button class="btn btn-flip"  id="btnFlip">⟳</button>
     <button class="btn btn-start" id="btnStart">▶ START</button>
-    <button class="btn btn-stop"  id="btnStop"  style="display:none">■ STOP</button>
+    <button class="btn btn-stop"  id="btnStop" style="display:none">■ STOP</button>
   </div>
   <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
 </div>
@@ -213,6 +196,7 @@
     <div class="settings-title-main">Settings</div>
     <button class="btn-close-settings" id="btnCloseSettings">✕</button>
   </div>
+
   <div class="settings-section">
     <div class="section-label">📷 Camera</div>
     <div class="interval-row">
@@ -224,10 +208,9 @@
       </div>
     </div>
   </div>
-  <div class="settings-section">
-    <div class="section-label">🔔 Haptic Feedback <span style="font-size:9px;color:var(--muted2);text-transform:none;letter-spacing:0">(Android only — iOS blocks vibration in browsers)</span></div>
 
-    <!-- Warning -->
+  <div class="settings-section">
+    <div class="section-label">🔔 Haptic Feedback <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0">(Android only)</span></div>
     <div class="setting-row">
       <div><div class="setting-label-text">Obstacle Warning</div><div class="setting-desc">Vibration when warning detected</div></div>
       <label class="toggle"><input type="checkbox" id="hapticWarning" checked><span class="toggle-slider"></span></label>
@@ -237,8 +220,6 @@
       <div class="haptic-option" data-target="warning" data-pattern="double">·· Double<span class="haptic-hint">2 pulses</span></div>
       <div class="haptic-option" data-target="warning" data-pattern="long">— Long<span class="haptic-hint">600ms</span></div>
     </div>
-
-    <!-- Urgent -->
     <div class="setting-row" style="margin-top:10px">
       <div><div class="setting-label-text">Urgent Obstacle</div><div class="setting-desc">Vibration for immediate hazard</div></div>
       <label class="toggle"><input type="checkbox" id="hapticUrgent" checked><span class="toggle-slider"></span></label>
@@ -249,8 +230,6 @@
       <div class="haptic-option active" data-target="urgent" data-pattern="triple">··· Triple<span class="haptic-hint">3 pulses</span></div>
       <div class="haptic-option" data-target="urgent" data-pattern="long">— Long<span class="haptic-hint">600ms</span></div>
     </div>
-
-    <!-- Nav -->
     <div class="setting-row" style="margin-top:10px">
       <div><div class="setting-label-text">Navigation Turn</div><div class="setting-desc">Vibration at each turn</div></div>
       <label class="toggle"><input type="checkbox" id="hapticNav" checked><span class="toggle-slider"></span></label>
@@ -262,929 +241,511 @@
       <div class="haptic-option" data-target="nav" data-pattern="long">—— Long<span class="haptic-hint">600ms</span></div>
     </div>
   </div>
+
   <div class="settings-section">
     <div class="section-label">🔊 Audio</div>
     <div class="setting-row">
       <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
       <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
     </div>
-    <div class="setting-row">
+    <div class="setting-row" style="border:none">
       <div><div class="setting-label-text">Silent When Safe</div><div class="setting-desc">Don't speak on clear path</div></div>
       <label class="toggle"><input type="checkbox" id="silentSafe" checked><span class="toggle-slider"></span></label>
     </div>
-    <div class="setting-row" style="border:none">
-      <div><div class="setting-label-text">ElevenLabs Voice</div><div class="setting-desc">Natural AI voice (requires API key)</div></div>
-      <label class="toggle"><input type="checkbox" id="useEleven"><span class="toggle-slider"></span></label>
-    </div>
-    <input class="settings-input" id="elevenKey" type="password" placeholder="ElevenLabs API key (optional)">
-
-    <!-- Voice picker -->
-    <div id="voicePicker" style="margin-top:10px">
-      <div class="setting-label-text" style="font-size:12px;margin-bottom:8px;color:var(--muted2)">Choose Voice — tap to preview</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <div class="haptic-option" data-voice-id="21m00Tcm4TlvDq8ikWAM" data-voice-name="Rachel">👩 Rachel<span class="haptic-hint">Female · Calm</span></div>
-        <div class="haptic-option" data-voice-id="EXAVITQu4vr4xnSDxMaL" data-voice-name="Bella">👩 Bella<span class="haptic-hint">Female · Soft</span></div>
-        <div class="haptic-option active" data-voice-id="pFZP5JQG7iQjIQuC4Bku" data-voice-name="Lily">👩 Lily<span class="haptic-hint">Female · Warm</span></div>
-        <div class="haptic-option" data-voice-id="pNInz6obpgDQGcFmaJgB" data-voice-name="Adam">👨 Adam<span class="haptic-hint">Male · Deep</span></div>
-        <div class="haptic-option" data-voice-id="VR6AewLTigWG4xSOukaG" data-voice-name="Arnold">👨 Arnold<span class="haptic-hint">Male · Crisp</span></div>
-        <div class="haptic-option" data-voice-id="TxGEqnHWrfWFTfGW9XjX" data-voice-name="Josh">👨 Josh<span class="haptic-hint">Male · Young</span></div>
-      </div>
-      <div id="voicePreviewStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:8px;min-height:14px"></div>
-    </div>
-
-    <input class="settings-input" id="anthropicKey" type="password" placeholder="Anthropic API key (required for voice)" style="margin-top:8px">
+    <div class="section-label" style="margin-top:16px">🎙️ Voice — tap to preview</div>
+    <div class="voice-grid" id="voiceGrid"></div>
+    <div id="voicePreviewStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;min-height:14px;text-align:center"></div>
   </div>
 </div>
 
 <script>
-  // ── iOS unlock ───────────────────────────────────────────────
-  document.addEventListener('touchstart', () => {
-    try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
-    // iOS Safari requires a silent utterance to unlock speechSynthesis
-    try {
-      const u = new SpeechSynthesisUtterance('');
-      u.volume = 0;
-      window.speechSynthesis.speak(u);
-    } catch {}
-  }, { once: true, passive: true });
+// ── No API keys in frontend — all calls go through the backend ──
 
-  // ── CONFIG ───────────────────────────────────────────────────
-  const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
-  const WAKE_WORDS = ['hey birdbox','hey bird box','birdbox','bird box','hey bird'];
-  const NAV_THRESHOLD = 15;
+// ── iOS unlock ────────────────────────────────────────────────
+document.addEventListener('touchstart', () => {
+  try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
+  try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
+}, { once: true, passive: true });
 
-  // API key stored in localStorage — never hardcoded
-  // ── LOAD SAVED SETTINGS ON STARTUP ───────────────────────────
-  (function loadSavedSettings() {
-    const ak = localStorage.getItem('anthropic_key');
-    const ek = localStorage.getItem('eleven_key');
-    // Default use_eleven to TRUE if never set before
-    const ueStored = localStorage.getItem('use_eleven');
-    const ue = ueStored === null ? true : ueStored === 'true';
-    const vi = localStorage.getItem('voice_id');
+// ── CONFIG ────────────────────────────────────────────────────
+const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
+const WAKE_WORDS = ['hey birdbox','hey bird box','birdbox','bird box','hey bird'];
 
-    // Pre-load keys from .env via backend if not already saved
-<<<<<<< HEAD
-    const ELEVEN_KEY_DEFAULT   = '';
-    const ANTHROPIC_KEY_DEFAULT = '';
-=======
-    const ELEVEN_KEY_DEFAULT   = 'sk_d49c8e17ea3864222cbb643ceb03e8b0a5daa8f38594d1fa';
-    const ANTHROPIC_KEY_DEFAULT = 'sk-ant-api03-IVu0FNi_...'; // your anthropic key
->>>>>>> d5a9b62231398f12fa03e594ec315940039d1658
-    if (!ek) {
-      localStorage.setItem('eleven_key', ELEVEN_KEY_DEFAULT);
-      document.getElementById('elevenKey').value = ELEVEN_KEY_DEFAULT;
-    }
-    if (!ak) {
-      localStorage.setItem('anthropic_key', ANTHROPIC_KEY_DEFAULT);
-      document.getElementById('anthropicKey').value = ANTHROPIC_KEY_DEFAULT;
-    }
-
-    if (ak) document.getElementById('anthropicKey').value = ak;
-    if (ek) document.getElementById('elevenKey').value    = ek;
-    document.getElementById('useEleven').checked = ue;
-  if (ue) localStorage.setItem('use_eleven', 'true');
-    if (vi) {
-      selectedVoiceId = vi;
-      document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => {
-        o.classList.toggle('active', o.dataset.voiceId === vi);
-      });
-    }
-  })();
-
-  function getAnthropicKey() {
-    const fieldKey = document.getElementById('anthropicKey')?.value.trim();
-    if (fieldKey) { localStorage.setItem('anthropic_key', fieldKey); return fieldKey; }
-    return localStorage.getItem('anthropic_key') || null;
+// ── VOICES — each with distinct personality settings ─────────
+// stability:        lower = more expressive/varied tone
+// similarity_boost: how closely it matches original voice
+// style:            speaking style exaggeration (0–1)
+// speaking_rate is handled via the model naturally
+const VOICES = [
+  {
+    id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', emoji: '👩',
+    tag: 'Female · Calm & Clear',
+    desc: 'Steady, reassuring. Great for navigation.',
+    preview: 'Path is clear ahead. Continue straight for 50 meters.',
+    settings: { stability: 0.75, similarity_boost: 0.80, style: 0.10 }
+  },
+  {
+    id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', emoji: '👩',
+    tag: 'Female · Soft & Gentle',
+    desc: 'Warm and soothing. Low-stress alerts.',
+    preview: 'Caution — there is a bicycle approaching on your left.',
+    settings: { stability: 0.60, similarity_boost: 0.75, style: 0.25 }
+  },
+  {
+    id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', emoji: '👩',
+    tag: 'Female · Bright & Energetic',
+    desc: 'Upbeat and lively. Keeps you alert.',
+    preview: 'Turn right in 20 meters — just past the intersection!',
+    settings: { stability: 0.45, similarity_boost: 0.85, style: 0.40 }
+  },
+  {
+    id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', emoji: '👨',
+    tag: 'Male · Deep & Authoritative',
+    desc: 'Bold and commanding. Clear warnings.',
+    preview: 'Warning. Steps detected directly in your path. Stop now.',
+    settings: { stability: 0.82, similarity_boost: 0.88, style: 0.05 }
+  },
+  {
+    id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', emoji: '👨',
+    tag: 'Male · Crisp & Direct',
+    desc: 'Sharp and precise. Fast, clear alerts.',
+    preview: 'Stop immediately. Vehicle crossing your path ahead.',
+    settings: { stability: 0.68, similarity_boost: 0.80, style: 0.18 }
+  },
+  {
+    id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', emoji: '👨',
+    tag: 'Male · Relaxed & Natural',
+    desc: 'Conversational and easy to listen to.',
+    preview: "Hey, you've arrived at your destination. Nice work!",
+    settings: { stability: 0.40, similarity_boost: 0.72, style: 0.35 }
   }
+];
 
-  function getElevenKey() {
-    const fieldKey = document.getElementById('elevenKey')?.value.trim();
-    if (fieldKey) { localStorage.setItem('eleven_key', fieldKey); return fieldKey; }
-    return localStorage.getItem('eleven_key') || null;
-  }
+// ── STATE ─────────────────────────────────────────────────────
+let selectedVoiceId   = localStorage.getItem('voice_id') || VOICES[2].id;
+let previewAudio      = null;
+let stream            = null;
+let scanInterval      = null;
+let facingMode        = 'environment';
+let intervalMs        = 4000;
+let frameCount        = 0;
+let userLocation      = null;
+let commandMode       = false;
+let wakeActive        = false;
+let wakeRecog         = null;
+let isScanning        = false;
+let scanAbort         = null;
+let navActive         = false;
+let navSteps          = [];
+let navStepIndex      = 0;
+let navDest           = null;
+let navDestName       = '';
+let lastAnnouncedStep = -1;
+let geoWatchId        = null;
+let cachedAddress     = null;
+const hapticPrefs     = { warning: 'single', urgent: 'triple', nav: 'nav' };
 
-  let stream       = null;
-  let scanInterval = null;
-  let facingMode   = 'environment';
-  let intervalMs   = 2500;
-  let frameCount   = 0;
-  let userLocation = null;
-  let commandMode  = false;
-  let wakeActive   = false;
-  let wakeRecog    = null;
-  let isScanning   = false;
-  let scanAbort    = null;
+// ── DOM ───────────────────────────────────────────────────────
+const video          = document.getElementById('video');
+const canvas         = document.getElementById('canvas');
+const ctx            = canvas.getContext('2d');
+const btnStart       = document.getElementById('btnStart');
+const btnStop        = document.getElementById('btnStop');
+const btnFlip        = document.getElementById('btnFlip');
+const alertBox       = document.getElementById('alertBox');
+const alertTypeEl    = document.getElementById('alertType');
+const alertMsgEl     = document.getElementById('alertMsg');
+const alertTimeEl    = document.getElementById('alertTime');
+const statusPill     = document.getElementById('statusPill');
+const scanLine       = document.getElementById('scanLine');
+const noCam          = document.getElementById('noCam');
+const frameCountEl   = document.getElementById('frameCount');
+const glowBorder     = document.getElementById('glowBorder');
+const wakeHint       = document.getElementById('wakeHint');
+const voiceBox       = document.getElementById('voiceBox');
+const userTranscript = document.getElementById('userTranscript');
+const aiTranscript   = document.getElementById('aiTranscript');
+const navBar         = document.getElementById('navBar');
+const navDestEl      = document.getElementById('navDest');
+const navTotalEl     = document.getElementById('navTotal');
+const navStepEl      = document.getElementById('navStep');
+const navStepDistEl  = document.getElementById('navStepDist');
 
-  // ── NAVIGATION STATE ─────────────────────────────────────────
-  let navActive    = false;
-  let navSteps     = [];
-  let navStepIndex = 0;
-  let navDest      = null;
-  let navDestName  = '';
-  let lastAnnouncedStep = -1;
-
-  // ── DOM ──────────────────────────────────────────────────────
-  const video          = document.getElementById('video');
-  const canvas         = document.getElementById('canvas');
-  const ctx            = canvas.getContext('2d');
-  const btnStart       = document.getElementById('btnStart');
-  const btnStop        = document.getElementById('btnStop');
-  const btnFlip        = document.getElementById('btnFlip');
-  const alertBox       = document.getElementById('alertBox');
-  const alertTypeEl    = document.getElementById('alertType');
-  const alertMsgEl     = document.getElementById('alertMsg');
-  const alertTimeEl    = document.getElementById('alertTime');
-  const statusPill     = document.getElementById('statusPill');
-  const scanLine       = document.getElementById('scanLine');
-  const noCam          = document.getElementById('noCam');
-  const frameCountEl   = document.getElementById('frameCount');
-  const glowBorder     = document.getElementById('glowBorder');
-  const wakeHint       = document.getElementById('wakeHint');
-  const voiceBox       = document.getElementById('voiceBox');
-  const userTranscript = document.getElementById('userTranscript');
-  const aiTranscript   = document.getElementById('aiTranscript');
-  const navBar         = document.getElementById('navBar');
-  const navDestEl      = document.getElementById('navDest');
-  const navTotalEl     = document.getElementById('navTotal');
-  const navStepEl      = document.getElementById('navStep');
-  const navStepDistEl  = document.getElementById('navStepDist');
-
-  // ── SETTINGS ─────────────────────────────────────────────────
-  document.getElementById('btnSettings').addEventListener('click', () => {
-    // restore all saved settings
-    const savedAnthropicKey = localStorage.getItem('anthropic_key');
-    const savedElevenKey    = localStorage.getItem('eleven_key');
-    const savedUseEleven    = localStorage.getItem('use_eleven') === 'true';
-    const savedVoiceId      = localStorage.getItem('voice_id');
-    const savedVoiceName    = localStorage.getItem('voice_name');
-
-    if (savedAnthropicKey) document.getElementById('anthropicKey').value = savedAnthropicKey;
-    if (savedElevenKey)    document.getElementById('elevenKey').value    = savedElevenKey;
-    document.getElementById('useEleven').checked = savedUseEleven;
-
-    // restore selected voice highlight
-    if (savedVoiceId) {
-      document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => {
-        o.classList.toggle('active', o.dataset.voiceId === savedVoiceId);
-      });
-      selectedVoiceId = savedVoiceId;
-    }
-
-    document.getElementById('settingsOverlay').classList.add('visible');
+// ── BUILD VOICE GRID ──────────────────────────────────────────
+function buildVoiceGrid() {
+  const grid = document.getElementById('voiceGrid');
+  grid.innerHTML = '';
+  VOICES.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'voice-card' + (v.id === selectedVoiceId ? ' active' : '');
+    card.dataset.voiceId = v.id;
+    card.innerHTML = `
+      <div class="voice-card-top">
+        <span style="font-size:18px">${v.emoji}</span>
+        <span class="voice-card-name">${v.name}</span>
+      </div>
+      <div class="voice-card-tag">${v.tag}</div>
+      <div class="voice-card-desc">${v.desc}</div>
+    `;
+    card.addEventListener('click', () => previewVoice(v.id));
+    grid.appendChild(card);
   });
+}
 
-  document.getElementById('btnCloseSettings').addEventListener('click', () => {
-    // save all keys and preferences
-    const ak = document.getElementById('anthropicKey').value.trim();
-    const ek = document.getElementById('elevenKey').value.trim();
-    if (ak) localStorage.setItem('anthropic_key', ak);
-    if (ek) localStorage.setItem('eleven_key', ek);
-    localStorage.setItem('use_eleven', document.getElementById('useEleven').checked);
-    localStorage.setItem('voice_id',   selectedVoiceId);
-    document.getElementById('settingsOverlay').classList.remove('visible');
-  });
-  document.querySelectorAll('.ipill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      document.querySelectorAll('.ipill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      intervalMs = parseInt(pill.dataset.val);
-    });
-  });
+async function previewVoice(voiceId) {
+  document.querySelectorAll('.voice-card').forEach(c => c.classList.toggle('active', c.dataset.voiceId === voiceId));
+  selectedVoiceId = voiceId;
+  localStorage.setItem('voice_id', voiceId);
 
-  // stop nav button
-  document.getElementById('btnStopNav').addEventListener('click', stopNavigation);
+  if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+  window.speechSynthesis.cancel();
 
-  // ── LOCATION ────────────────────────────────────────────────
-  let geoWatchId    = null;
-  let cachedAddress = null;
+  const voice  = VOICES.find(v => v.id === voiceId);
+  const status = document.getElementById('voicePreviewStatus');
+  status.textContent = `Loading ${voice.name}…`;
 
-  function initLocation() {
-    if (!navigator.geolocation) {
-      showAlert('warning', 'GPS not supported on this device.');
-      return;
-    }
-    if (geoWatchId !== null) return;
-
-    // iOS Safari: getCurrentPosition first to warm up GPS before watchPosition
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        try {
-          const geo = await fetch(
-            `${BACKEND}/location/address?lat=${userLocation.lat}&lng=${userLocation.lng}`,
-            { headers: { 'ngrok-skip-browser-warning': 'true' } }
-          );
-          const geoData = await geo.json();
-          if (geoData.address && geoData.address !== 'Unknown location') {
-            cachedAddress = geoData.address;
-            showAlert('safe', `📍 ${cachedAddress}`);
-          } else {
-            // fallback to coordinates
-            cachedAddress = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-            showAlert('safe', `📍 GPS locked: ${cachedAddress}`);
-          }
-        } catch {
-          cachedAddress = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-          showAlert('safe', `📍 GPS locked: ${cachedAddress}`);
-        }
-        geoWatchId = navigator.geolocation.watchPosition(
-          (pos) => {
-            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            if (navActive) checkNavProgress();
-          },
-          (err) => {
-            const msgs = {
-              1: 'Location denied. Go to Settings > Safari > Location and allow.',
-              2: 'GPS signal unavailable. Try moving outside.',
-              3: 'GPS timed out. Retrying...'
-            };
-            showAlert('warning', msgs[err.code] || 'GPS error.');
-            if (err.code === 3) { geoWatchId = null; setTimeout(initLocation, 4000); }
-          },
-          { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
-        );
-      },
-      (err) => {
-        const msgs = {
-          1: 'Location denied. Go to Settings > Safari > Location and allow.',
-          2: 'GPS signal unavailable. Try moving outside.',
-          3: 'GPS timed out. Make sure Location Services is ON.'
-        };
-        showAlert('warning', msgs[err.code] || 'GPS failed.');
-        if (err.code === 3) setTimeout(initLocation, 4000);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-  }
-
-  // ── HAVERSINE (client-side for nav) ──────────────────────────
-  function haversine(lat1, lng1, lat2, lng2) {
-    const R = 6371000;
-    const p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
-    const dp = (lat2-lat1)*Math.PI/180, dl = (lng2-lng1)*Math.PI/180;
-    const a  = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
-
-  // ── CAMERA ───────────────────────────────────────────────────
-  async function startCamera() {
-    try {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      video.srcObject = stream;
-      noCam.style.display = 'none';
-      return true;
-    } catch {
-      showAlert('urgent', 'Camera access denied.');
-      return false;
-    }
-  }
-
-  btnFlip.addEventListener('click', async () => {
-    facingMode = facingMode === 'environment' ? 'user' : 'environment';
-    await startCamera();
-  });
-
-  function captureFrame() {
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    ctx.drawImage(video, 0, 0);
-    const scale = Math.min(1, 512 / canvas.width);
-    const w = Math.round(canvas.width * scale);
-    const h = Math.round(canvas.height * scale);
-    const small = document.createElement('canvas');
-    small.width = w; small.height = h;
-    small.getContext('2d').drawImage(canvas, 0, 0, w, h);
-    return small.toDataURL('image/jpeg', 0.7).split(',')[1];
-  }
-
-  // ── ANALYZE ──────────────────────────────────────────────────
-  async function analyzeFrame(b64, signal) {
-    const res = await fetch(`${BACKEND}/analyze`, {
+  try {
+    const res = await fetch(`${BACKEND}/tts/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-      body: JSON.stringify({ image: b64 }),
-      signal
+      body: JSON.stringify({ text: voice.preview, voice_id: voiceId, voice_settings: voice.settings })
     });
-    if (!res.ok) throw new Error(`${res.status}`);
-    return await res.json();
-  }
-
-  // ── HAPTIC ───────────────────────────────────────────────────
-  const PATTERNS = {
-    single:  [150],
-    double:  [150, 100, 150],
-    triple:  [100, 80, 100, 80, 100],
-    long:    [600],
-    nav:     [400, 100, 400],
-    arrived: [1200, 200, 1200]
-  };
-
-  const hapticPrefs = { warning: 'single', urgent: 'triple', nav: 'nav' };
-
-  let hapticCtx = null;
-  function getHapticCtx() {
-    if (!hapticCtx) hapticCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (hapticCtx.state === 'suspended') hapticCtx.resume();
-    return hapticCtx;
-  }
-
-  function vibrateOnce(durationMs) {
-    if (navigator.vibrate) { navigator.vibrate(durationMs); return; }
-    // iOS — sharp click to trigger Taptic Engine
-    try {
-      const ctx = getHapticCtx();
-      const sr  = ctx.sampleRate;
-      const len = Math.ceil(sr * 0.015);
-      const buf = ctx.createBuffer(1, len, sr);
-      const d   = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = (i < len * 0.4 ? 1 : -0.5) * Math.exp(-i / (sr * 0.003));
-      const src  = ctx.createBufferSource();
-      const gain = ctx.createGain();
-      src.buffer = buf;
-      gain.gain.value = 4.0;
-      src.connect(gain); gain.connect(ctx.destination);
-      src.start(ctx.currentTime);
-    } catch {}
-  }
-
-  function vibrate(pattern) {
-    const seq = PATTERNS[pattern] || [150];
-    let delay = 0, isOn = true;
-    seq.forEach(ms => {
-      if (isOn) setTimeout(() => vibrateOnce(ms), delay);
-      delay += ms; isOn = !isOn;
-    });
-  }
-
-  function hapticForLevel(level) {
-    if (level === 'urgent'  && document.getElementById('hapticUrgent').checked)  vibrate(hapticPrefs.urgent);
-    if (level === 'warning' && document.getElementById('hapticWarning').checked) vibrate(hapticPrefs.warning);
-  }
-
-  // haptic pattern pickers
-  document.querySelectorAll('.haptic-option[data-pattern]').forEach(opt => {
-    opt.addEventListener('click', () => {
-      const target  = opt.dataset.target;
-      const pattern = opt.dataset.pattern;
-      document.querySelectorAll(`.haptic-option[data-target="${target}"]`).forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      hapticPrefs[target] = pattern;
-      vibrate(pattern);
-    });
-  });
-
-  // ── ELEVENLABS VOICE PICKER ───────────────────────────────────
-  let selectedVoiceId   = 'pFZP5JQG7iQjIQuC4Bku';
-  let previewAudio      = null;
-
-  document.querySelectorAll('.haptic-option[data-voice-id]').forEach(opt => {
-    opt.addEventListener('click', async () => {
-      // select it first
-      document.querySelectorAll('.haptic-option[data-voice-id]').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      selectedVoiceId = opt.dataset.voiceId;
-      const name      = opt.dataset.voiceName;
-      const voiceId   = opt.dataset.voiceId; // capture locally so it's definitely correct
-
-      // stop any previous preview
-      if (previewAudio) { previewAudio.pause(); previewAudio = null; }
-      window.speechSynthesis.cancel();
-
-      const status    = document.getElementById('voicePreviewStatus');
-      const elevenKey = getElevenKey();
-
-      // always try browser TTS first as immediate feedback
-      status.textContent = elevenKey ? `Loading ${name}'s voice…` : `Playing preview…`;
-
-      if (!elevenKey) {
-        const utt = new SpeechSynthesisUtterance(`Hi, I'm ${name}. I'll be your BirdBox guide.`);
-        utt.onend = () => { status.textContent = `${name} selected ✓`; };
-        window.speechSynthesis.speak(utt);
-        return;
-      }
-
-      // ElevenLabs preview — call directly, no backend needed
-      try {
-        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
-          method: 'POST',
-          headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: `Hi, I'm ${name}. I'll be your BirdBox navigation guide.`,
-            model_id: 'eleven_turbo_v2',
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-          })
-        });
-        if (!res.ok) throw new Error(`${res.status}`);
-        const blob = await res.blob();
-        previewAudio = new Audio(URL.createObjectURL(blob));
-        previewAudio.onended = () => { status.textContent = `${name} selected ✓`; previewAudio = null; };
-        previewAudio.play();
-        status.textContent = `Playing ${name}…`;
-      } catch (e) {
-        // fall back to browser TTS if ElevenLabs fails
-        status.textContent = `Using browser voice for ${name}…`;
-        const utt = new SpeechSynthesisUtterance(`Hi, I'm ${name}. I'll be your BirdBox guide.`);
-        utt.onend = () => { status.textContent = `${name} selected ✓`; };
-        window.speechSynthesis.speak(utt);
-      }
-    });
-  });
-
-  let isSpeaking = false;
-  const speakQueue = [];
-
-  function speak(text) {
-    return new Promise((resolve) => {
-      speakQueue.push({ text, resolve });
-      if (!isSpeaking) processQueue();
-    });
-  }
-
-  function processQueue() {
-    if (!speakQueue.length) { isSpeaking = false; return; }
-    isSpeaking = true;
-    const { text, resolve } = speakQueue.shift();
-    const elevenKey = getElevenKey();
-    const useEleven = document.getElementById('useEleven').checked;
-    if (useEleven && elevenKey) {
-      fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}/stream`, {
-        method: 'POST',
-        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_turbo_v2',
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-        })
-      }).then(res => {
-        if (res.ok) return res.blob();
-        throw new Error();
-      }).then(blob => {
-        const audio = new Audio(URL.createObjectURL(blob));
-        audio.onended = () => { resolve(); processQueue(); };
-        audio.play();
-      }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
-    } else {
-      speakBrowser(text, () => { resolve(); processQueue(); });
-    }
-  }
-
-  function speakBrowser(text, callback) {
-    if (!window.speechSynthesis) { callback?.(); return; }
-    // don't cancel — let current sentence finish unless commanded
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 1.0; utt.volume = 1.0;
-    utt.onend = () => callback?.();
-    utt.onerror = () => callback?.();
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    previewAudio = new Audio(URL.createObjectURL(blob));
+    previewAudio.onended = () => { status.textContent = `${voice.name} selected ✓`; previewAudio = null; };
+    previewAudio.play();
+    status.textContent = `Playing ${voice.name}…`;
+  } catch {
+    const utt = new SpeechSynthesisUtterance(voice.preview);
+    utt.onend = () => { status.textContent = `${voice.name} selected (browser fallback)`; };
     window.speechSynthesis.speak(utt);
   }
+}
 
-  function cancelSpeech() {
-    speakQueue.length = 0; // clear queue
-    isSpeaking = false;
-    window.speechSynthesis?.cancel();
-  }
+buildVoiceGrid();
 
-  // ── UI ───────────────────────────────────────────────────────
-  function setGlow(state) { glowBorder.className = state; }
-  function setStatus(state, label) {
-    statusPill.className   = 'status-pill ' + state;
-    statusPill.textContent = label || state.toUpperCase();
-  }
-
-  function showAlert(level, message) {
-    alertBox.className      = `visible ${level}`;
-    alertTypeEl.textContent = level.toUpperCase();
-    alertMsgEl.textContent  = message;
-    alertTimeEl.textContent = new Date().toLocaleTimeString();
-    if (!navActive) {
-      if      (level === 'urgent')  setGlow('urgent');
-      else if (level === 'warning') setGlow('warning');
-      else setGlow('idle');
-      if (level !== 'urgent') setTimeout(() => { if (!commandMode && !navActive) setGlow('idle'); }, 3000);
-    }
-  }
-
-  // ── SCAN LOOP ────────────────────────────────────────────────
-  async function doScan() {
-    if (commandMode || isScanning) return;
-    isScanning = true;
-    scanAbort = new AbortController();
-    scanLine.classList.add('running');
-    if (!navActive) setStatus('scanning', 'SCANNING');
-    try {
-      const b64    = captureFrame();
-      const result = await analyzeFrame(b64, scanAbort.signal);
-      if (commandMode) return;
-      frameCount++;
-      frameCountEl.textContent = `FRAMES ANALYZED: ${frameCount}`;
-      showAlert(result.level, result.message);
-      hapticForLevel(result.level);
-      if (userLocation) {
-        fetch(`${BACKEND}/location/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-          body: JSON.stringify({ ...userLocation, level: result.level, message: result.message })
-        }).catch(() => {});
-      }
-      const voiceOn = document.getElementById('voiceAlerts').checked;
-      const silent  = document.getElementById('silentSafe').checked;
-      if (voiceOn && !commandMode && (result.level !== 'safe' || !silent)) speak(result.message);
-    } catch (e) {
-      if (e.name !== 'AbortError' && !commandMode) showAlert('urgent', `Error: ${e.message}`);
-    } finally {
-      isScanning = false;
-      scanAbort  = null;
-      scanLine.classList.remove('running');
-      if (!commandMode && !navActive) setStatus('active', 'LIVE');
-    }
-  }
-
-  btnStart.addEventListener('click', async () => {
-    // iOS Safari: unlock speech and haptic on user gesture
-    try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
-    try { getHapticCtx(); } catch {}
-    const ok = await startCamera();
-    if (!ok) return;
-    setTimeout(initLocation, 800);
-    btnStart.style.display = 'none';
-    btnStop.style.display  = 'flex';
-    setStatus('active', 'LIVE');
-    showAlert('safe', 'BirdBox active. Say "Hey BirdBox" anytime.');
-    wakeHint.classList.remove('hidden');
-    setTimeout(() => wakeHint.classList.add('hidden'), 4000);
-    startWakeLoop();
-    await doScan();
-    scanInterval = setInterval(doScan, intervalMs);
+// ── SETTINGS PANEL ────────────────────────────────────────────
+document.getElementById('btnSettings').addEventListener('click', () => {
+  buildVoiceGrid();
+  document.getElementById('settingsOverlay').classList.add('visible');
+});
+document.getElementById('btnCloseSettings').addEventListener('click', () => {
+  document.getElementById('settingsOverlay').classList.remove('visible');
+});
+document.querySelectorAll('.ipill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.ipill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    intervalMs = parseInt(pill.dataset.val);
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = setInterval(doScan, intervalMs); }
   });
+});
+document.getElementById('btnStopNav').addEventListener('click', stopNavigation);
+document.querySelectorAll('.haptic-option[data-pattern]').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const target = opt.dataset.target, pattern = opt.dataset.pattern;
+    document.querySelectorAll(`.haptic-option[data-target="${target}"]`).forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    hapticPrefs[target] = pattern;
+    vibrate(pattern);
+  });
+});
 
-  btnStop.addEventListener('click', () => {
-    clearInterval(scanInterval);
-    stopWakeLoop();
-    stopNavigation();
+// ── LOCATION ──────────────────────────────────────────────────
+function initLocation() {
+  if (!navigator.geolocation) { showAlert('warning', 'GPS not supported.'); return; }
+  if (geoWatchId !== null) return;
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    try {
+      const geo = await fetch(`${BACKEND}/location/address?lat=${userLocation.lat}&lng=${userLocation.lng}`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+      const geoData = await geo.json();
+      cachedAddress = (geoData.address && geoData.address !== 'Unknown location') ? geoData.address : `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+    } catch { cachedAddress = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`; }
+    showAlert('safe', `📍 ${cachedAddress}`);
+    geoWatchId = navigator.geolocation.watchPosition(
+      (pos) => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (navActive) checkNavProgress(); },
+      (err) => { const m={1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'}; showAlert('warning', m[err.code]||'GPS error.'); if(err.code===3){geoWatchId=null;setTimeout(initLocation,4000);} },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
+    );
+  },
+  (err) => { const m={1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'}; showAlert('warning', m[err.code]||'GPS failed.'); if(err.code===3)setTimeout(initLocation,4000); },
+  { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+function haversine(lat1,lng1,lat2,lng2){const R=6371000,p1=lat1*Math.PI/180,p2=lat2*Math.PI/180,dp=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180,a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+// ── CAMERA ────────────────────────────────────────────────────
+async function startCamera() {
+  try {
     if (stream) stream.getTracks().forEach(t => t.stop());
-    stream = null; video.srcObject = null;
-    noCam.style.display    = 'flex';
-    btnStop.style.display  = 'none';
-    btnStart.style.display = 'flex';
-    setStatus('', 'OFFLINE');
-    setGlow('idle');
-    alertBox.className = '';
-    cancelSpeech();
-  });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width:{ideal:1280}, height:{ideal:720} }, audio: false });
+    video.srcObject = stream; noCam.style.display = 'none'; return true;
+  } catch { showAlert('urgent', 'Camera access denied.'); return false; }
+}
+btnFlip.addEventListener('click', async () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; await startCamera(); });
 
-  // ── WAKE WORD ─────────────────────────────────────────────────
-  function startWakeLoop() {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return;
-    wakeActive = true;
-    runWakeSession();
+function captureFrame() {
+  canvas.width = video.videoWidth||640; canvas.height = video.videoHeight||480;
+  ctx.drawImage(video,0,0);
+  const scale=Math.min(1,512/canvas.width), w=Math.round(canvas.width*scale), h=Math.round(canvas.height*scale);
+  const small=document.createElement('canvas'); small.width=w; small.height=h;
+  small.getContext('2d').drawImage(canvas,0,0,w,h);
+  return small.toDataURL('image/jpeg',0.7).split(',')[1];
+}
+
+async function analyzeFrame(b64, signal) {
+  const res = await fetch(`${BACKEND}/analyze`, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body:JSON.stringify({image:b64}), signal });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return await res.json();
+}
+
+// ── HAPTIC ────────────────────────────────────────────────────
+const PATTERNS = { single:[150], double:[150,100,150], triple:[100,80,100,80,100], long:[600], nav:[400,100,400], arrived:[1200,200,1200] };
+let hapticCtx = null;
+function getHapticCtx() { if (!hapticCtx) hapticCtx=new(window.AudioContext||window.webkitAudioContext)(); if(hapticCtx.state==='suspended')hapticCtx.resume(); return hapticCtx; }
+function vibrateOnce(ms) {
+  if (navigator.vibrate) { navigator.vibrate(ms); return; }
+  try { const c=getHapticCtx(),sr=c.sampleRate,len=Math.ceil(sr*.015),buf=c.createBuffer(1,len,sr),d=buf.getChannelData(0); for(let i=0;i<len;i++)d[i]=(i<len*.4?1:-.5)*Math.exp(-i/(sr*.003)); const src=c.createBufferSource(),gain=c.createGain(); src.buffer=buf; gain.gain.value=4; src.connect(gain); gain.connect(c.destination); src.start(c.currentTime); } catch {}
+}
+function vibrate(pattern) { const seq=PATTERNS[pattern]||[150]; let delay=0,isOn=true; seq.forEach(ms=>{if(isOn)setTimeout(()=>vibrateOnce(ms),delay);delay+=ms;isOn=!isOn;}); }
+function hapticForLevel(level) { if(level==='urgent'&&document.getElementById('hapticUrgent').checked)vibrate(hapticPrefs.urgent); if(level==='warning'&&document.getElementById('hapticWarning').checked)vibrate(hapticPrefs.warning); }
+
+// ── SPEECH — always tries ElevenLabs first ────────────────────
+let isSpeaking = false;
+const speakQueue = [];
+
+function speak(text) { return new Promise(resolve => { speakQueue.push({text,resolve}); if(!isSpeaking) processQueue(); }); }
+
+function processQueue() {
+  if (!speakQueue.length) { isSpeaking=false; return; }
+  isSpeaking = true;
+  const {text, resolve} = speakQueue.shift();
+  const voice = VOICES.find(v => v.id === selectedVoiceId) || VOICES[2];
+  // Call our own backend — no API key in the frontend
+  fetch(`${BACKEND}/tts/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+    body: JSON.stringify({ text, voice_id: voice.id, voice_settings: voice.settings })
+  }).then(res => res.ok ? res.blob() : Promise.reject())
+    .then(blob => {
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.onended = () => { resolve(); processQueue(); };
+      audio.play();
+    }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
+}
+
+function speakBrowser(text, cb) {
+  if (!window.speechSynthesis) { cb?.(); return; }
+  const utt = new SpeechSynthesisUtterance(text); utt.rate=1.0; utt.volume=1.0;
+  utt.onend = () => cb?.(); utt.onerror = () => cb?.();
+  window.speechSynthesis.speak(utt);
+}
+
+function cancelSpeech() { speakQueue.length=0; isSpeaking=false; window.speechSynthesis?.cancel(); }
+
+// ── UI ────────────────────────────────────────────────────────
+function setGlow(state) { glowBorder.className = state; }
+function setStatus(state, label) { statusPill.className='status-pill '+state; statusPill.textContent=label||state.toUpperCase(); }
+function showAlert(level, message) {
+  alertBox.className=`visible ${level}`; alertTypeEl.textContent=level.toUpperCase();
+  alertMsgEl.textContent=message; alertTimeEl.textContent=new Date().toLocaleTimeString();
+  if (!navActive) {
+    if(level==='urgent') setGlow('urgent');
+    else if(level==='warning') setGlow('warning');
+    else setGlow('idle');
+    if(level!=='urgent') setTimeout(()=>{ if(!commandMode&&!navActive) setGlow('idle'); },3000);
   }
+}
 
-  function stopWakeLoop() {
-    wakeActive = false;
-    if (wakeRecog) { try { wakeRecog.stop(); } catch {} wakeRecog = null; }
-  }
-
-  function runWakeSession() {
-    if (!wakeActive || commandMode) return;
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    wakeRecog = new SR();
-    wakeRecog.continuous = false; wakeRecog.interimResults = true;
-    wakeRecog.lang = 'en-US'; wakeRecog.maxAlternatives = 3;
-
-    wakeRecog.onresult = (e) => {
-      for (let i = 0; i < e.results.length; i++) {
-        for (let j = 0; j < e.results[i].length; j++) {
-          const t = e.results[i][j].transcript.toLowerCase().trim();
-          if (WAKE_WORDS.some(w => t.includes(w))) {
-            wakeRecog.abort();
-            if (!commandMode) activateCommand();
-            return;
-          }
-        }
-      }
-    };
-    wakeRecog.onend   = () => { if (wakeActive && !commandMode) setTimeout(runWakeSession, 300); };
-    wakeRecog.onerror = (e) => { if (e.error !== 'aborted' && wakeActive && !commandMode) setTimeout(runWakeSession, 1000); };
-    try { wakeRecog.start(); } catch { setTimeout(runWakeSession, 1000); }
-  }
-
-  // ── COMMAND MODE ─────────────────────────────────────────────
-  function playChime() {
-    try {
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      [880,1100].forEach((freq,i) => {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.connect(gain); gain.connect(actx.destination);
-        osc.frequency.value = freq;
-        const t = actx.currentTime + i*.15;
-        gain.gain.setValueAtTime(.25,t); gain.gain.exponentialRampToValueAtTime(.001,t+.25);
-        osc.start(t); osc.stop(t+.25);
-      });
-    } catch {}
-  }
-
-  function activateCommand() {
-    commandMode = true;
-    if (scanAbort) { scanAbort.abort(); scanAbort = null; }
-    cancelSpeech();
-    vibrate('single'); playChime();
-    setGlow('listening'); setStatus('listening', 'LISTENING');
-    voiceBox.classList.add('visible');
-    userTranscript.textContent = '';
-    aiTranscript.textContent   = 'Listening...';
-
-    const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const cmd = new SR();
-    cmd.continuous = false; cmd.interimResults = false;
-    cmd.lang = 'en-US'; cmd.maxAlternatives = 1;
-    let gotResult = false;
-
-    cmd.onresult = async (e) => {
-      gotResult = true;
-      const text = e.results[0][0].transcript;
-      userTranscript.textContent = `You: ${text}`;
-      aiTranscript.textContent   = 'Thinking...';
-      setGlow('speaking'); setStatus('speaking', 'RESPONDING');
-      await handleVoiceCommand(text);
-      endCommand();
-    };
-    cmd.onerror = () => { if (!gotResult) endCommand(); };
-    cmd.onend   = () => { if (!gotResult) endCommand(); };
-    setTimeout(() => { try { cmd.start(); } catch { endCommand(); } }, 300);
-  }
-
-  function endCommand() {
-    commandMode = false;
-    if (navActive) { setGlow('navigating'); setStatus('navigating', 'NAVIGATING'); }
-    else           { setGlow('idle');       setStatus('active', 'LIVE'); }
-    setTimeout(() => {
-      voiceBox.classList.remove('visible');
-      if (wakeActive) runWakeSession();
-    }, 5000);
-  }
-
-  // ── VOICE COMMAND HANDLER ────────────────────────────────────
-  async function handleVoiceCommand(text) {
-    const lower = text.toLowerCase();
-
-    // ── NAVIGATION INTENT ──────────────────────────────────────
-    const navMatch = lower.match(/(?:take me to|navigate to|go to|directions to|direct me to|bring me to|find|get me to|walk me to|lead me to|i want to go to|how do i get to)\s+(.+)/i);    if (navMatch && userLocation) {
-      const query = navMatch[1].trim();
-      aiTranscript.textContent = `BirdBox: Searching for ${query} nearby...`;
-      await speak(`Searching for ${query} nearby.`);
-      try {
-        const res = await fetch(`${BACKEND}/navigate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-          body: JSON.stringify({ query, user_lat: userLocation.lat, user_lng: userLocation.lng })
-        });
-        const data = await res.json();
-        if (!data.places?.length) {
-          aiTranscript.textContent = `BirdBox: Sorry, I couldn't find ${query} nearby.`;
-          await speak(`Sorry, I couldn't find ${query} nearby.`);
-          return;
-        }
-        // store places for selection
-        window._navPlaces = data.places;
-        window._navQuery  = query;
-        aiTranscript.textContent = `BirdBox: ${data.speech}`;
-        await speak(data.speech);
-        // re-activate to hear selection
-        setTimeout(() => {
-          if (!commandMode) listenForSelection();
-        }, 500);
-      } catch (e) {
-        await speak('Sorry, there was an error searching for locations.');
-      }
-      return;
-    }
-
-    // ── OPTION SELECTION ───────────────────────────────────────
-    if (window._navPlaces && /option\s*[123]|first|second|third|one|two|three/i.test(lower)) {
-      let idx = 0;
-      if (/option\s*2|second|two/i.test(lower)) idx = 1;
-      if (/option\s*3|third|three/i.test(lower)) idx = 2;
-      const place = window._navPlaces[idx];
-      if (place) {
-        window._navPlaces = null;
-        await startNavigation(place);
-        return;
-      }
-    }
-
-    // ── STOP NAVIGATION ────────────────────────────────────────
-    if (/stop|cancel|end navigation/i.test(lower)) {
-      stopNavigation();
-      await speak('Navigation stopped.');
-      return;
-    }
-
-    // ── GENERAL CHAT ───────────────────────────────────────────
-    try {
-      const locationStr = userLocation
-        ? (cachedAddress
-            ? `\nUser's current location: ${cachedAddress} (coordinates: ${userLocation.lat}, ${userLocation.lng})`
-            : `\nUser's current GPS: ${userLocation.lat}, ${userLocation.lng}`)
-        : '';
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': getAnthropicKey(),
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 80,
-          stream: true,
-          system: `You are BirdBox, a voice assistant for a visually impaired user walking outdoors. Be very concise — 1-2 sentences max. Help with obstacles and general questions. IMPORTANT: if the user wants to navigate somewhere, DO NOT give them directions yourself — just say "Starting navigation to [place name]" so the app can handle it.${locationStr}`,
-          messages: [{ role: 'user', content: text }]
-        })
-      });
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let reply = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        for (const line of chunk.split('\n')) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') break;
-          try {
-            const json = JSON.parse(data);
-            if (json.type === 'content_block_delta') {
-              reply += json.delta?.text || '';
-              aiTranscript.textContent = `BirdBox: ${reply}`;
-            }
-          } catch {}
-        }
-      }
-
-      if (reply) {
-        // detect if Claude said "Starting navigation to X" and trigger nav flow
-        const navTrigger = reply.match(/starting navigation to (.+)/i);
-        if (navTrigger && userLocation) {
-          const query = navTrigger[1].replace(/[.!?]$/, '').trim();
-          await speak(reply.trim());
-          // trigger actual navigation
-          setTimeout(async () => {
-            await handleVoiceCommand(`navigate to ${query}`);
-          }, 300);
-          return;
-        }
-
-        await speak(reply.trim());
-        fetch(`${BACKEND}/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-          body: JSON.stringify({ message: text, location: null, log_only: true, ai_response: reply.trim() })
-        }).catch(() => {});
-        if (reply.trim().endsWith('?')) {
-          setTimeout(() => {
-            if (!commandMode) listenForSelection();
-          }, 500);
-          return;
-        }
-      }
-    } catch {
-      await speak('Sorry, I could not connect to the server.');
-    }
-  }
-
-  // ── LISTEN FOR OPTION SELECTION ──────────────────────────────
-  function listenForSelection() {
+// ── SCAN LOOP ─────────────────────────────────────────────────
+async function doScan() {
+  if (commandMode||isScanning) return;
+  isScanning=true; scanAbort=new AbortController();
+  scanLine.classList.add('running');
+  if (!navActive) setStatus('scanning','SCANNING');
+  try {
+    const b64=captureFrame(), result=await analyzeFrame(b64,scanAbort.signal);
     if (commandMode) return;
-    commandMode = true;
-    setGlow('listening'); setStatus('listening', 'LISTENING');
-    voiceBox.classList.add('visible');
-    userTranscript.textContent = '';
-    aiTranscript.textContent   = 'Say Option 1, 2, or 3...';
+    frameCount++; frameCountEl.textContent=`FRAMES ANALYZED: ${frameCount}`;
+    showAlert(result.level,result.message); hapticForLevel(result.level);
+    if (userLocation) fetch(`${BACKEND}/location/update`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({...userLocation,level:result.level,message:result.message})}).catch(()=>{});
+    const voiceOn=document.getElementById('voiceAlerts').checked, silent=document.getElementById('silentSafe').checked;
+    if (voiceOn&&!commandMode&&(result.level!=='safe'||!silent)) speak(result.message);
+  } catch(e) { if(e.name!=='AbortError'&&!commandMode) showAlert('urgent',`Error: ${e.message}`); }
+  finally { isScanning=false; scanAbort=null; scanLine.classList.remove('running'); if(!commandMode&&!navActive) setStatus('active','LIVE'); }
+}
 
-    const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const cmd = new SR();
-    cmd.continuous = false; cmd.interimResults = false; cmd.lang = 'en-US';
-    let got = false;
+// ── START / STOP ──────────────────────────────────────────────
+btnStart.addEventListener('click', async () => {
+  try { const u=new SpeechSynthesisUtterance(''); u.volume=0; window.speechSynthesis.speak(u); } catch {}
+  try { getHapticCtx(); } catch {}
+  const ok = await startCamera(); if (!ok) return;
+  setTimeout(initLocation, 800);
+  btnStart.style.display='none'; btnStop.style.display='flex';
+  setStatus('active','LIVE');
+  showAlert('safe','BirdBox active. Say "Hey BirdBox" anytime.');
+  wakeHint.classList.remove('hidden'); setTimeout(()=>wakeHint.classList.add('hidden'),4000);
+  startWakeLoop(); await doScan();
+  scanInterval = setInterval(doScan, intervalMs);
+});
 
-    cmd.onresult = async (e) => {
-      got = true;
-      const text = e.results[0][0].transcript;
-      userTranscript.textContent = `You: ${text}`;
-      setGlow('speaking'); setStatus('speaking', 'RESPONDING');
-      await handleVoiceCommand(text);
-      endCommand();
-    };
-    cmd.onerror = () => { if (!got) endCommand(); };
-    cmd.onend   = () => { if (!got) endCommand(); };
-    setTimeout(() => { try { cmd.start(); } catch { endCommand(); } }, 200);
-  }
+btnStop.addEventListener('click', () => {
+  clearInterval(scanInterval); scanInterval=null;
+  stopWakeLoop(); stopNavigation();
+  if (stream) stream.getTracks().forEach(t=>t.stop());
+  stream=null; video.srcObject=null;
+  noCam.style.display='flex'; btnStop.style.display='none'; btnStart.style.display='flex';
+  setStatus('','OFFLINE'); setGlow('idle'); alertBox.className=''; cancelSpeech();
+});
 
-  // ── START NAVIGATION ─────────────────────────────────────────
-  async function startNavigation(place) {
-    if (!userLocation) { await speak('Location not available yet.'); return; }
+// ── WAKE WORD ─────────────────────────────────────────────────
+function startWakeLoop() { if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window))return; wakeActive=true; runWakeSession(); }
+function stopWakeLoop() { wakeActive=false; if(wakeRecog){try{wakeRecog.stop();}catch{}wakeRecog=null;} }
+function runWakeSession() {
+  if (!wakeActive||commandMode) return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  wakeRecog=new SR(); wakeRecog.continuous=false; wakeRecog.interimResults=true; wakeRecog.lang='en-US'; wakeRecog.maxAlternatives=3;
+  wakeRecog.onresult=(e)=>{ for(let i=0;i<e.results.length;i++) for(let j=0;j<e.results[i].length;j++){const t=e.results[i][j].transcript.toLowerCase().trim(); if(WAKE_WORDS.some(w=>t.includes(w))){wakeRecog.abort();if(!commandMode)activateCommand();return;}} };
+  wakeRecog.onend=()=>{ if(wakeActive&&!commandMode)setTimeout(runWakeSession,300); };
+  wakeRecog.onerror=(e)=>{ if(e.error!=='aborted'&&wakeActive&&!commandMode)setTimeout(runWakeSession,1000); };
+  try{wakeRecog.start();}catch{setTimeout(runWakeSession,1000);}
+}
 
-    await speak(`Starting navigation to ${place.name}.`);
+// ── COMMAND MODE ──────────────────────────────────────────────
+function playChime() {
+  try { const actx=new(window.AudioContext||window.webkitAudioContext)(); [880,1100].forEach((freq,i)=>{ const osc=actx.createOscillator(),gain=actx.createGain(); osc.connect(gain);gain.connect(actx.destination);osc.frequency.value=freq; const t=actx.currentTime+i*.15; gain.gain.setValueAtTime(.25,t);gain.gain.exponentialRampToValueAtTime(.001,t+.25);osc.start(t);osc.stop(t+.25); }); } catch {}
+}
+function activateCommand() {
+  commandMode=true; if(scanAbort){scanAbort.abort();scanAbort=null;} cancelSpeech();
+  vibrate('single'); playChime(); setGlow('listening'); setStatus('listening','LISTENING');
+  voiceBox.classList.add('visible'); userTranscript.textContent=''; aiTranscript.textContent='Listening...';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, cmd=new SR();
+  cmd.continuous=false; cmd.interimResults=false; cmd.lang='en-US'; cmd.maxAlternatives=1;
+  let gotResult=false;
+  cmd.onresult=async(e)=>{ gotResult=true; const text=e.results[0][0].transcript; userTranscript.textContent=`You: ${text}`; aiTranscript.textContent='Thinking...'; setGlow('speaking'); setStatus('speaking','RESPONDING'); await handleVoiceCommand(text); endCommand(); };
+  cmd.onerror=()=>{ if(!gotResult)endCommand(); };
+  cmd.onend=()=>{ if(!gotResult)endCommand(); };
+  setTimeout(()=>{ try{cmd.start();}catch{endCommand();} },300);
+}
+function endCommand() {
+  commandMode=false;
+  if(navActive){setGlow('navigating');setStatus('navigating','NAVIGATING');}
+  else{setGlow('idle');setStatus('active','LIVE');}
+  setTimeout(()=>{ voiceBox.classList.remove('visible'); if(wakeActive)runWakeSession(); },5000);
+}
 
+// ── VOICE COMMAND HANDLER ─────────────────────────────────────
+async function handleVoiceCommand(text) {
+  const lower = text.toLowerCase();
+
+  // navigation intent
+  const navMatch = lower.match(/(?:take me to|navigate to|go to|directions to|direct me to|bring me to|find|get me to|walk me to|lead me to|i want to go to|how do i get to)\s+(.+)/i);
+  if (navMatch && userLocation) {
+    const query = navMatch[1].trim();
+    aiTranscript.textContent=`BirdBox: Searching for ${query} nearby...`;
+    await speak(`Searching for ${query} nearby.`);
     try {
-      const res = await fetch(
-        `${BACKEND}/directions?origin_lat=${userLocation.lat}&origin_lng=${userLocation.lng}&dest_lat=${place.lat}&dest_lng=${place.lng}`,
-        { headers: { 'ngrok-skip-browser-warning': 'true' } }
-      );
-      const data = await res.json();
-      if (!data.steps?.length) { await speak('Could not get directions.'); return; }
-
-      navActive     = true;
-      navSteps      = data.steps;
-      navStepIndex  = 0;
-      navDest       = { lat: place.lat, lng: place.lng };
-      navDestName   = place.name;
-      lastAnnouncedStep = -1;
-
-      // show nav bar
-      navDestEl.textContent    = `→ ${place.name}`;
-      navTotalEl.textContent   = `${data.total_distance} · ${data.total_duration}`;
-      navBar.classList.add('visible');
-
-      setGlow('navigating');
-      setStatus('navigating', 'NAVIGATING');
-
-      // speak first step
-      await announceStep(0);
-    } catch (e) {
-      await speak('Sorry, could not load directions.');
-    }
+      const res=await fetch(`${BACKEND}/navigate`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({query,user_lat:userLocation.lat,user_lng:userLocation.lng})});
+      const data=await res.json();
+      if (!data.places?.length){aiTranscript.textContent=`BirdBox: Sorry, couldn't find ${query} nearby.`;await speak(`Sorry, I couldn't find ${query} nearby.`);return;}
+      window._navPlaces=data.places; window._navQuery=query;
+      aiTranscript.textContent=`BirdBox: ${data.speech}`; await speak(data.speech);
+      setTimeout(()=>{ if(!commandMode)listenForSelection(); },500);
+    } catch { await speak('Sorry, there was an error searching for locations.'); }
+    return;
   }
 
-  async function announceStep(index) {
-    if (index >= navSteps.length) return;
-    const step = navSteps[index];
-    lastAnnouncedStep = index;
-    navStepEl.textContent     = step.instruction;
-    navStepDistEl.textContent = step.distance_text;
-    if (document.getElementById('hapticNav').checked) vibrate('nav');
-    await speak(step.instruction);
+  // option selection
+  if (window._navPlaces && /option\s*[123]|first|second|third|one|two|three/i.test(lower)) {
+    let idx=0; if(/option\s*2|second|two/i.test(lower))idx=1; if(/option\s*3|third|three/i.test(lower))idx=2;
+    const place=window._navPlaces[idx]; if(place){window._navPlaces=null;await startNavigation(place);return;}
   }
 
-  // ── CHECK NAV PROGRESS (called on each GPS update) ───────────
-  async function checkNavProgress() {
-    if (!navActive || !userLocation || navStepIndex >= navSteps.length) return;
+  // stop nav
+  if (/stop|cancel|end navigation/i.test(lower)) { stopNavigation(); await speak('Navigation stopped.'); return; }
 
-    const step       = navSteps[navStepIndex];
-    const distToStep = haversine(userLocation.lat, userLocation.lng, step.end_lat, step.end_lng);
-    const distToDest = haversine(userLocation.lat, userLocation.lng, navDest.lat, navDest.lng);
-
-    // update nav bar with live distance
-    navStepDistEl.textContent = `${Math.round(distToStep)}m away`;
-
-    // arrived at destination
-    if (distToDest < 25) {
-      vibrate('arrived');
-      await speak(`You have arrived at ${navDestName}!`);
-      stopNavigation();
-      return;
-    }
-
-    // reached current step waypoint — advance to next
-    if (distToStep < 20 && navStepIndex !== lastAnnouncedStep) {
-      lastAnnouncedStep = navStepIndex;
-      navStepIndex++;
-      if (navStepIndex < navSteps.length) {
-        await announceStep(navStepIndex);
-      }
-      return;
-    }
-
-    // proactive warning: announce turn 40m ahead
-    if (distToStep < 40 && distToStep >= 20 && navStepIndex !== lastAnnouncedStep) {
-      const upcoming = navSteps[navStepIndex];
-      if (/turn|left|right|cross|continue/i.test(upcoming.instruction)) {
-        lastAnnouncedStep = navStepIndex;
-        await speak(`In ${Math.round(distToStep)} meters, ${upcoming.instruction}`);
-        if (document.getElementById('hapticNav').checked) vibrate('nav');
+  // general chat — routed through backend, no key in frontend
+  try {
+    const res=await fetch(`${BACKEND}/chat/stream`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},
+      body:JSON.stringify({
+        message: text,
+        location: userLocation ? { lat: userLocation.lat, lng: userLocation.lng, address: cachedAddress } : null
+      })
+    });
+    const reader=res.body.getReader(), decoder=new TextDecoder(); let reply='';
+    while(true){
+      const{done,value}=await reader.read(); if(done)break;
+      for(const line of decoder.decode(value).split('\n')){
+        if(!line.startsWith('data: '))continue; const d=line.slice(6).trim(); if(d==='[DONE]')break;
+        try{const j=JSON.parse(d);if(j.type==='content_block_delta'){reply+=j.delta?.text||'';aiTranscript.textContent=`BirdBox: ${reply}`;}}catch{}
       }
     }
-  }
+    if (reply) {
+      const navTrigger=reply.match(/starting navigation to (.+)/i);
+      if(navTrigger&&userLocation){const q=navTrigger[1].replace(/[.!?]$/,'').trim();await speak(reply.trim());setTimeout(async()=>{await handleVoiceCommand(`navigate to ${q}`)},300);return;}
+      await speak(reply.trim());
+      fetch(`${BACKEND}/chat`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,location:null,log_only:true,ai_response:reply.trim()})}).catch(()=>{});
+      if(reply.trim().endsWith('?')){setTimeout(()=>{if(!commandMode)listenForSelection();},500);return;}
+    }
+  } catch { await speak('Sorry, I could not connect to the server.'); }
+}
 
-  function stopNavigation() {
-    navActive    = false;
-    navSteps     = [];
-    navStepIndex = 0;
-    navDest      = null;
-    navBar.classList.remove('visible');
-    setGlow('idle');
-    if (stream) setStatus('active', 'LIVE');
-    window._navPlaces = null;
+function listenForSelection() {
+  if(commandMode)return; commandMode=true; setGlow('listening'); setStatus('listening','LISTENING');
+  voiceBox.classList.add('visible'); userTranscript.textContent=''; aiTranscript.textContent='Say Option 1, 2, or 3...';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, cmd=new SR();
+  cmd.continuous=false; cmd.interimResults=false; cmd.lang='en-US'; let got=false;
+  cmd.onresult=async(e)=>{got=true;const text=e.results[0][0].transcript;userTranscript.textContent=`You: ${text}`;setGlow('speaking');setStatus('speaking','RESPONDING');await handleVoiceCommand(text);endCommand();};
+  cmd.onerror=()=>{if(!got)endCommand();}; cmd.onend=()=>{if(!got)endCommand();};
+  setTimeout(()=>{try{cmd.start();}catch{endCommand();}},200);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+async function startNavigation(place) {
+  if(!userLocation){await speak('Location not available yet.');return;}
+  await speak(`Starting navigation to ${place.name}.`);
+  try {
+    const res=await fetch(`${BACKEND}/directions?origin_lat=${userLocation.lat}&origin_lng=${userLocation.lng}&dest_lat=${place.lat}&dest_lng=${place.lng}`,{headers:{'ngrok-skip-browser-warning':'true'}});
+    const data=await res.json();
+    if(!data.steps?.length){await speak('Could not get directions.');return;}
+    navActive=true; navSteps=data.steps; navStepIndex=0; navDest={lat:place.lat,lng:place.lng}; navDestName=place.name; lastAnnouncedStep=-1;
+    navDestEl.textContent=`→ ${place.name}`; navTotalEl.textContent=`${data.total_distance} · ${data.total_duration}`;
+    navBar.classList.add('visible'); setGlow('navigating'); setStatus('navigating','NAVIGATING');
+    await announceStep(0);
+  } catch { await speak('Sorry, could not load directions.'); }
+}
+
+async function announceStep(index) {
+  if(index>=navSteps.length)return;
+  const step=navSteps[index]; lastAnnouncedStep=index;
+  navStepEl.textContent=step.instruction; navStepDistEl.textContent=step.distance_text;
+  if(document.getElementById('hapticNav').checked)vibrate('nav');
+  await speak(step.instruction);
+}
+
+async function checkNavProgress() {
+  if(!navActive||!userLocation||navStepIndex>=navSteps.length)return;
+  const step=navSteps[navStepIndex];
+  const distToStep=haversine(userLocation.lat,userLocation.lng,step.end_lat,step.end_lng);
+  const distToDest=haversine(userLocation.lat,userLocation.lng,navDest.lat,navDest.lng);
+  navStepDistEl.textContent=`${Math.round(distToStep)}m away`;
+  if(distToDest<25){vibrate('arrived');await speak(`You have arrived at ${navDestName}!`);stopNavigation();return;}
+  if(distToStep<20&&navStepIndex!==lastAnnouncedStep){lastAnnouncedStep=navStepIndex;navStepIndex++;if(navStepIndex<navSteps.length)await announceStep(navStepIndex);return;}
+  if(distToStep<40&&distToStep>=20&&navStepIndex!==lastAnnouncedStep){
+    const upcoming=navSteps[navStepIndex];
+    if(/turn|left|right|cross|continue/i.test(upcoming.instruction)){lastAnnouncedStep=navStepIndex;await speak(`In ${Math.round(distToStep)} meters, ${upcoming.instruction}`);if(document.getElementById('hapticNav').checked)vibrate('nav');}
   }
+}
+
+function stopNavigation() {
+  navActive=false; navSteps=[]; navStepIndex=0; navDest=null;
+  navBar.classList.remove('visible'); setGlow('idle');
+  if(stream)setStatus('active','LIVE'); window._navPlaces=null;
+}
 </script>
 </body>
 </html>

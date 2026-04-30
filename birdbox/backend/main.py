@@ -81,7 +81,6 @@ manager = ConnectionManager()
 
 # ── Distance helpers ──────────────────────────────────────────
 def haversine(lat1, lng1, lat2, lng2) -> float:
-    """Returns distance in meters between two GPS coords."""
     R = 6371000
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi  = math.radians(lat2 - lat1)
@@ -90,7 +89,6 @@ def haversine(lat1, lng1, lat2, lng2) -> float:
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
 def bearing(lat1, lng1, lat2, lng2) -> str:
-    """Returns cardinal direction from point 1 to point 2."""
     dLng = math.radians(lng2 - lng1)
     lat1r, lat2r = math.radians(lat1), math.radians(lat2)
     x = math.sin(dLng) * math.cos(lat2r)
@@ -121,12 +119,9 @@ async def get_address(lat: float, lng: float):
     return {"address": "Unknown location", "error": data["status"]}
 
 
-# ── 2. Nearby places with distance + direction ────────────────
+# ── 2. Nearby places ─────────────────────────────────────────
 @app.get("/places/nearby")
-async def nearby_places(
-    lat: float, lng: float,
-    query: str = Query(...)
-):
+async def nearby_places(lat: float, lng: float, query: str = Query(...)):
     async with httpx.AsyncClient() as client:
         r = await client.get(
             "https://maps.googleapis.com/maps/api/place/textsearch/json",
@@ -139,26 +134,22 @@ async def nearby_places(
         dist = haversine(lat, lng, loc["lat"], loc["lng"])
         dir_ = bearing(lat, lng, loc["lat"], loc["lng"])
         results.append({
-            "name":      p["name"],
-            "address":   p.get("vicinity") or p.get("formatted_address", ""),
-            "lat":       loc["lat"],
-            "lng":       loc["lng"],
-            "place_id":  p["place_id"],
-            "distance":  round(dist),
+            "name":          p["name"],
+            "address":       p.get("vicinity") or p.get("formatted_address", ""),
+            "lat":           loc["lat"],
+            "lng":           loc["lng"],
+            "place_id":      p["place_id"],
+            "distance":      round(dist),
             "distance_text": format_distance(dist),
-            "direction": dir_,
+            "direction":     dir_,
         })
-    # sort by distance
     results.sort(key=lambda x: x["distance"])
     return {"places": results}
 
 
-# ── 3. Directions (walking, metric) ──────────────────────────
+# ── 3. Directions ─────────────────────────────────────────────
 @app.get("/directions")
-async def get_directions(
-    origin_lat: float, origin_lng: float,
-    dest_lat: float,   dest_lng: float
-):
+async def get_directions(origin_lat: float, origin_lng: float, dest_lat: float, dest_lng: float):
     async with httpx.AsyncClient() as client:
         r = await client.get(
             "https://maps.googleapis.com/maps/api/directions/json",
@@ -173,18 +164,17 @@ async def get_directions(
     data = r.json()
     if data["status"] != "OK":
         return {"steps": [], "error": data["status"]}
-
     leg   = data["routes"][0]["legs"][0]
     steps = []
     for s in leg["steps"]:
         instruction = re.sub(r"<[^>]+>", "", s["html_instructions"])
         steps.append({
-            "instruction":  instruction,
-            "distance_m":   s["distance"]["value"],       # meters (for GPS tracking)
+            "instruction":   instruction,
+            "distance_m":    s["distance"]["value"],
             "distance_text": s["distance"]["text"],
             "duration_text": s["duration"]["text"],
-            "end_lat":      s["end_location"]["lat"],
-            "end_lng":      s["end_location"]["lng"],
+            "end_lat":       s["end_location"]["lat"],
+            "end_lng":       s["end_location"]["lng"],
         })
     return {
         "total_distance": leg["distance"]["text"],
@@ -195,7 +185,7 @@ async def get_directions(
     }
 
 
-# ── 4. Navigate — full flow: search + speak options ───────────
+# ── 4. Navigate ───────────────────────────────────────────────
 class NavigateRequest(BaseModel):
     query:    str
     user_lat: float
@@ -203,7 +193,6 @@ class NavigateRequest(BaseModel):
 
 @app.post("/navigate")
 async def navigate(req: NavigateRequest):
-    """Returns places with spoken introduction ready for TTS."""
     async with httpx.AsyncClient() as client:
         r = await client.get(
             "https://maps.googleapis.com/maps/api/place/textsearch/json",
@@ -225,18 +214,13 @@ async def navigate(req: NavigateRequest):
             "direction":     dir_,
         })
     places.sort(key=lambda x: x["distance"])
-
     if not places:
         return {"places": [], "speech": f"Sorry, I couldn't find any {req.query} nearby."}
-
-    # build spoken response
     parts = [f"I found {len(places)} option{'s' if len(places)>1 else ''}."]
     for i, p in enumerate(places):
         parts.append(f"Option {i+1}: {p['name']}, {p['distance_text']} to the {p['direction']}.")
     parts.append("Which one would you like?")
-    speech = " ".join(parts)
-
-    return {"places": places, "speech": speech}
+    return {"places": places, "speech": " ".join(parts)}
 
 
 # ── 5. Claude Vision ──────────────────────────────────────────
@@ -264,20 +248,18 @@ Important: people simply walking nearby or standing around are NOT obstacles —
     return json.loads(raw.replace("```json","").replace("```","").strip())
 
 
-# ── 6. Claude Chat ────────────────────────────────────────────
+# ── 6. Chat (log-only, non-streaming) ────────────────────────
 class ChatRequest(BaseModel):
-    message:    str
-    location:   Optional[dict] = None
-    log_only:   bool = False
+    message:     str
+    location:    Optional[dict] = None
+    log_only:    bool = False
     ai_response: Optional[str] = None
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    # log-only mode: frontend already has the reply, just log it
     if req.log_only and req.ai_response:
         log_to_snowflake("VOICE_COMMANDS", {"user_text": req.message, "ai_response": req.ai_response})
         return {"ok": True}
-
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     location_str = ""
     if req.location:
@@ -293,7 +275,7 @@ async def chat(req: ChatRequest):
         model="claude-haiku-4-5-20251001",
         max_tokens=100,
         system=f"""You are BirdBox, a voice assistant for a visually impaired user walking outdoors.
-Be very concise — 1-2 sentences max. Help with navigation, obstacles, and general questions.{location_str}""",
+Be very concise — 1-2 sentences max.{location_str}""",
         messages=[{"role": "user", "content": req.message}]
     )
     reply = message.content[0].text.strip()
@@ -301,31 +283,64 @@ Be very concise — 1-2 sentences max. Help with navigation, obstacles, and gene
     return {"reply": reply}
 
 
-# ── 7. ElevenLabs TTS ─────────────────────────────────────────
-class TTSRequest(BaseModel):
-    text:     str
-    api_key:  str = ""
-    voice_id: str = "Rachel"
+# ── 7. Chat streaming — frontend calls this, key stays on server ──
+class ChatStreamRequest(BaseModel):
+    message:  str
+    location: Optional[dict] = None
 
-@app.post("/tts")
-async def text_to_speech(req: TTSRequest):
-    key = req.api_key or ELEVEN_KEY
-    voice_map = {"Rachel":"21m00Tcm4TlvDq8ikWAM","Adam":"pNInz6obpgDQGcFmaJgB","Bella":"EXAVITQu4vr4xnSDxMaL"}
-    vid = voice_map.get(req.voice_id, req.voice_id)
-    async with httpx.AsyncClient() as client:
+@app.post("/chat/stream")
+async def chat_stream(req: ChatStreamRequest):
+    location_str = ""
+    if req.location:
+        addr = req.location.get("address")
+        lat  = req.location.get("lat")
+        lng  = req.location.get("lng")
+        if addr and addr not in ("Unknown location", None):
+            location_str = f"\nUser location: {addr} (coordinates: {lat}, {lng})"
+        elif lat and lng:
+            location_str = f"\nUser GPS: {lat}, {lng}"
+
+    async def generate():
+        client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+        with client.messages.stream(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=80,
+            system=f"You are BirdBox, a voice assistant for a visually impaired user walking outdoors. Be very concise — 1-2 sentences max. IMPORTANT: if the user wants to navigate somewhere, say 'Starting navigation to [place name]' so the app can handle it.{location_str}",
+            messages=[{"role": "user", "content": req.message}]
+        ) as stream:
+            for text in stream.text_stream:
+                chunk = {"type": "content_block_delta", "delta": {"text": text}}
+                yield f"data: {json.dumps(chunk)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+# ── 8. TTS streaming — voice_settings passed from frontend ───
+class TTSStreamRequest(BaseModel):
+    text:           str
+    voice_id:       str = "pFZP5JQG7iQjIQuC4Bku"   # default Lily
+    voice_settings: Optional[dict] = None
+
+@app.post("/tts/stream")
+async def tts_stream(req: TTSStreamRequest):
+    settings = req.voice_settings or {"stability": 0.5, "similarity_boost": 0.75, "style": 0.2}
+    async with httpx.AsyncClient(timeout=20.0) as client:
         r = await client.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/stream",
-            headers={"xi-api-key": key, "Content-Type": "application/json"},
-            json={"text": req.text, "model_id": "eleven_turbo_v2",
-                  "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}},
-            timeout=15.0
+            f"https://api.elevenlabs.io/v1/text-to-speech/{req.voice_id}/stream",
+            headers={"xi-api-key": ELEVEN_KEY, "Content-Type": "application/json"},
+            json={
+                "text":           req.text,
+                "model_id":       "eleven_turbo_v2",
+                "voice_settings": settings
+            }
         )
     if r.status_code != 200:
-        return {"error": f"ElevenLabs {r.status_code}"}
+        return {"error": f"ElevenLabs {r.status_code}: {r.text}"}
     return StreamingResponse(iter([r.content]), media_type="audio/mpeg")
 
 
-# ── 8. Location update → dashboard ───────────────────────────
+# ── 9. Location update → dashboard ───────────────────────────
 class LocationUpdate(BaseModel):
     lat:     float
     lng:     float
@@ -346,7 +361,7 @@ async def location_update(update: LocationUpdate):
     return {"ok": True}
 
 
-# ── 9. Analytics ──────────────────────────────────────────────
+# ── 10. Analytics ─────────────────────────────────────────────
 @app.get("/analytics")
 async def get_analytics():
     try:
@@ -367,7 +382,7 @@ async def get_analytics():
         return {"error": str(e)}
 
 
-# ── 10. WebSocket ─────────────────────────────────────────────
+# ── 11. WebSocket ─────────────────────────────────────────────
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -375,11 +390,3 @@ async def websocket_endpoint(websocket: WebSocket):
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-# ── 11. Config endpoint (serves keys to frontend securely) ────
-@app.get("/config")
-async def get_config():
-    return {
-        "eleven_key":    ELEVEN_KEY    or "",
-        "anthropic_key": ANTHROPIC_KEY or "",
-    }
