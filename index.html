@@ -278,13 +278,6 @@ const WAKE_WORDS = ['hey birdbox','hey bird box','birdbox','bird box','hey bird'
 // speaking_rate is handled via the model naturally
 const VOICES = [
   {
-    id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', emoji: '👩',
-    tag: 'Female · Calm & Clear',
-    desc: 'Steady, reassuring. Great for navigation.',
-    preview: "Hi, I'm Rachel. Path ahead is clear — continue straight for 50 meters.",
-    settings: { stability: 0.75, similarity_boost: 0.80, style: 0.10 }
-  },
-  {
     id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', emoji: '👩',
     tag: 'Female · Soft & Gentle',
     desc: 'Warm and soothing. Low-stress alerts.',
@@ -311,18 +304,13 @@ const VOICES = [
     desc: 'Sharp and precise. Fast, clear alerts.',
     preview: "Hi, I'm Arnold. Stop immediately — vehicle crossing your path ahead.",
     settings: { stability: 0.68, similarity_boost: 0.80, style: 0.18 }
-  },
-  {
-    id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', emoji: '👨',
-    tag: 'Male · Relaxed & Natural',
-    desc: 'Conversational and easy to listen to.',
-    preview: "Hey, I'm Josh! You've arrived at your destination. Nice work!",
-    settings: { stability: 0.40, similarity_boost: 0.72, style: 0.35 }
   }
 ];
 
 // ── STATE ─────────────────────────────────────────────────────
-let selectedVoiceId   = localStorage.getItem('voice_id') || VOICES[2].id;
+const VALID_VOICE_IDS = ['EXAVITQu4vr4xnSDxMaL','pFZP5JQG7iQjIQuC4Bku','pNInz6obpgDQGcFmaJgB','VR6AewLTigWG4xSOukaG'];
+const savedVoice = localStorage.getItem('voice_id');
+let selectedVoiceId = (savedVoice && VALID_VOICE_IDS.includes(savedVoice)) ? savedVoice : 'pFZP5JQG7iQjIQuC4Bku'; // default Lily
 let previewAudio      = null;
 let stream            = null;
 let scanInterval      = null;
