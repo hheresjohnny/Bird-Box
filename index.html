@@ -800,7 +800,22 @@
         }
       }
 
-      if (reply) await speak(reply.trim());
+      if (reply) {
+        await speak(reply.trim());
+        // log to Snowflake via backend
+        fetch(`${BACKEND}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+          body: JSON.stringify({ message: text, location: null, log_only: true, ai_response: reply.trim() })
+        }).catch(() => {});
+        // if AI asked a question, automatically go back to listening
+        if (reply.trim().endsWith('?')) {
+          setTimeout(() => {
+            if (!commandMode) listenForSelection();
+          }, 500);
+          return; // don't call endCommand yet — listenForSelection will handle it
+        }
+      }
     } catch {
       await speak('Sorry, I could not connect to the server.');
     }
@@ -883,32 +898,37 @@
   async function checkNavProgress() {
     if (!navActive || !userLocation || navStepIndex >= navSteps.length) return;
 
-    const step    = navSteps[navStepIndex];
+    const step       = navSteps[navStepIndex];
     const distToStep = haversine(userLocation.lat, userLocation.lng, step.end_lat, step.end_lng);
     const distToDest = haversine(userLocation.lat, userLocation.lng, navDest.lat, navDest.lng);
 
+    // update nav bar with live distance
+    navStepDistEl.textContent = `${Math.round(distToStep)}m away`;
+
     // arrived at destination
-    if (distToDest < 20) {
+    if (distToDest < 25) {
       vibrate('arrived');
       await speak(`You have arrived at ${navDestName}!`);
       stopNavigation();
       return;
     }
 
-    // approaching next step waypoint
-    if (distToStep < NAV_THRESHOLD && navStepIndex !== lastAnnouncedStep) {
+    // reached current step waypoint — advance to next
+    if (distToStep < 20 && navStepIndex !== lastAnnouncedStep) {
+      lastAnnouncedStep = navStepIndex;
       navStepIndex++;
       if (navStepIndex < navSteps.length) {
         await announceStep(navStepIndex);
       }
+      return;
     }
 
-    // proactive warning: announce upcoming turn when 30m away
-    if (distToStep < 30 && distToStep > NAV_THRESHOLD && navStepIndex !== lastAnnouncedStep) {
-      const step = navSteps[navStepIndex];
-      if (/turn|left|right/i.test(step.instruction)) {
+    // proactive warning: announce turn 40m ahead
+    if (distToStep < 40 && distToStep >= 20 && navStepIndex !== lastAnnouncedStep) {
+      const upcoming = navSteps[navStepIndex];
+      if (/turn|left|right|cross|continue/i.test(upcoming.instruction)) {
         lastAnnouncedStep = navStepIndex;
-        await speak(`In ${Math.round(distToStep)} meters, ${step.instruction}`);
+        await speak(`In ${Math.round(distToStep)} meters, ${upcoming.instruction}`);
         if (document.getElementById('hapticNav').checked) vibrate('nav');
       }
     }

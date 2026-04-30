@@ -265,11 +265,18 @@ Respond ONLY with JSON (no markdown):
 
 # ── 6. Claude Chat ────────────────────────────────────────────
 class ChatRequest(BaseModel):
-    message:  str
-    location: Optional[dict] = None
+    message:    str
+    location:   Optional[dict] = None
+    log_only:   bool = False
+    ai_response: Optional[str] = None
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
+    # log-only mode: frontend already has the reply, just log it
+    if req.log_only and req.ai_response:
+        log_to_snowflake("VOICE_COMMANDS", {"user_text": req.message, "ai_response": req.ai_response})
+        return {"ok": True}
+
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     location_str = ""
     if req.location:
