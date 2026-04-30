@@ -257,18 +257,6 @@
       <div class="haptic-option active" data-target="nav" data-pattern="nav">— — Nav<span class="haptic-hint">2 long</span></div>
       <div class="haptic-option" data-target="nav" data-pattern="long">—— Long<span class="haptic-hint">600ms</span></div>
     </div>
-
-    <!-- Test buttons -->
-    <div style="margin-top:14px">
-      <div class="setting-label-text" style="font-size:12px;margin-bottom:8px">Test Patterns</div>
-      <div class="haptic-demo">
-        <button class="haptic-btn" id="testSingle">· Single</button>
-        <button class="haptic-btn" id="testDouble">·· Double</button>
-        <button class="haptic-btn" id="testTriple">··· Triple</button>
-        <button class="haptic-btn" id="testLong">— Long</button>
-        <button class="haptic-btn" id="testNav">— — Nav</button>
-      </div>
-    </div>
   </div>
   <div class="settings-section">
     <div class="section-label">🔊 Audio</div>
@@ -505,7 +493,6 @@
     arrived: [1200, 200, 1200]
   };
 
-  // selected pattern per event — defaults
   const hapticPrefs = {
     warning: 'single',
     urgent:  'triple',
@@ -513,8 +500,37 @@
   };
 
   function vibrate(pattern) {
-    if (!navigator.vibrate) return;
-    navigator.vibrate(PATTERNS[pattern] || [150]);
+    const seq = PATTERNS[pattern] || [150];
+    // Android: use navigator.vibrate
+    if (navigator.vibrate) {
+      navigator.vibrate(seq);
+      return;
+    }
+    // iOS: simulate via AudioContext clicks (triggers Taptic Engine)
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      let time = ctx.currentTime;
+      let isVibrating = true;
+      seq.forEach((ms, i) => {
+        if (isVibrating) {
+          // create a brief click burst
+          const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * ms / 1000), ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let j = 0; j < data.length; j++) {
+            data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (ctx.sampleRate * 0.002));
+          }
+          const src = ctx.createBufferSource();
+          const gain = ctx.createGain();
+          src.buffer = buf;
+          gain.gain.value = 1.5;
+          src.connect(gain);
+          gain.connect(ctx.destination);
+          src.start(time);
+        }
+        time += ms / 1000;
+        isVibrating = !isVibrating;
+      });
+    } catch {}
   }
 
   function hapticForLevel(level) {
@@ -522,26 +538,17 @@
     if (level === 'warning' && document.getElementById('hapticWarning').checked) vibrate(hapticPrefs.warning);
   }
 
-  // wire up haptic option pickers
+  // haptic option pickers — vibrate immediately on tap
   document.querySelectorAll('.haptic-option').forEach(opt => {
     opt.addEventListener('click', () => {
       const target  = opt.dataset.target;
       const pattern = opt.dataset.pattern;
-      // update selection
       document.querySelectorAll(`.haptic-option[data-target="${target}"]`).forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       hapticPrefs[target] = pattern;
-      // test it immediately
-      vibrate(pattern);
+      vibrate(pattern); // feel it immediately when selected
     });
   });
-
-  // wire up test buttons
-  document.getElementById('testSingle').addEventListener('click', () => vibrate('single'));
-  document.getElementById('testDouble').addEventListener('click', () => vibrate('double'));
-  document.getElementById('testTriple').addEventListener('click', () => vibrate('triple'));
-  document.getElementById('testLong').addEventListener('click',   () => vibrate('long'));
-  document.getElementById('testNav').addEventListener('click',    () => vibrate('nav'));
 
   let isSpeaking = false;
   const speakQueue = [];
