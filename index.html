@@ -231,8 +231,7 @@
 
 // ── iOS unlock ────────────────────────────────────────────────
 document.addEventListener('touchstart', () => {
-  try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch {}
-  try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
+  unlockAudio();
 }, { once: true, passive: true });
 
 // ── CONFIG ────────────────────────────────────────────────────
@@ -514,9 +513,30 @@ function hapticForLevel(level) {
   if (level==='warning') vibrate(hapticPrefs.warning);
 }
 
-// ── SPEECH — always tries ElevenLabs first ────────────────────
-let isSpeaking = false;
-const speakQueue = [];
+// ── SPEECH — ElevenLabs via backend, unlocked on first user tap ──
+let isSpeaking   = false;
+let audioUnlocked = false;
+const speakQueue  = [];
+
+// Call this on any user gesture to unlock audio playback on iOS
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  try {
+    // play a silent audio blob to unlock the audio context
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const buf  = ctx.createBuffer(1, 1, 22050);
+    const src  = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume();
+  } catch {}
+  try {
+    const u = new SpeechSynthesisUtterance(''); u.volume = 0;
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
 
 function speak(text) { return new Promise(resolve => { speakQueue.push({text,resolve}); if(!isSpeaking) processQueue(); }); }
 
@@ -525,6 +545,7 @@ function processQueue() {
   isSpeaking = true;
   const {text, resolve} = speakQueue.shift();
   const voice = VOICES.find(v => v.id === selectedVoiceId) || VOICES[0];
+
   fetch(`${BACKEND}/tts/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
@@ -532,36 +553,30 @@ function processQueue() {
   }).then(res => {
     if (!res.ok) { console.error('TTS failed:', res.status); return Promise.reject(); }
     return res.blob();
-  }).then(async blob => {
+  }).then(blob => {
     const url   = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.volume = 1.0;
-
-    // resume AudioContext first — required on iOS/Android after page load
-    try {
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      await actx.resume();
-      const source = actx.createMediaElementSource(audio);
-      const gain   = actx.createGain();
-      gain.gain.value = 3.0;
-      source.connect(gain);
-      gain.connect(actx.destination);
-      audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); actx.close(); };
-      audio.onerror = () => { actx.close(); speakBrowser(text, () => { resolve(); processQueue(); }); };
-    } catch(e) {
-      // gain boost failed — still play without it
-      audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); };
-      audio.onerror = () => { speakBrowser(text, () => { resolve(); processQueue(); }); };
-    }
-
-    try {
-      await audio.play();
-    } catch(e) {
-      // play() blocked — fall back to browser voice
-      console.warn('ElevenLabs play blocked, using browser voice:', e.message);
+    audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); };
+    audio.onerror = () => { URL.revokeObjectURL(url); speakBrowser(text, () => { resolve(); processQueue(); }); };
+    // play — works because audio was unlocked on START button tap
+    audio.play().then(() => {
+      // try to boost volume via gain node after play starts
+      try {
+        const actx   = new (window.AudioContext || window.webkitAudioContext)();
+        actx.resume().then(() => {
+          const src  = actx.createMediaElementSource(audio);
+          const gain = actx.createGain();
+          gain.gain.value = 3.0;
+          src.connect(gain);
+          gain.connect(actx.destination);
+        });
+      } catch {}
+    }).catch(e => {
+      console.warn('ElevenLabs play failed:', e.message);
       URL.revokeObjectURL(url);
       speakBrowser(text, () => { resolve(); processQueue(); });
-    }
+    });
   }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
 }
 
@@ -608,10 +623,10 @@ async function doScan() {
 
 // ── START / STOP ──────────────────────────────────────────────
 btnStart.addEventListener('click', async () => {
-  try { const u=new SpeechSynthesisUtterance(''); u.volume=0; window.speechSynthesis.speak(u); } catch {}
+  unlockAudio(); // unlock audio on user gesture — must be first
   try { getHapticCtx(); } catch {}
   const ok = await startCamera(); if (!ok) return;
-  setTimeout(initLocation, 800);
+  initLocation(); // start GPS immediately, no delay
   btnStart.style.display='none'; btnStop.style.display='flex';
   setStatus('active','LIVE');
   showAlert('safe','BirdBox active. Say "Hey BirdBox" anytime.');
