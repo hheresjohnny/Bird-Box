@@ -412,4 +412,4 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket)   

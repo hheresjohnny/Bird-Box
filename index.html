@@ -399,7 +399,6 @@ function buildVoiceGrid() {
 }
 
 async function previewVoice(voiceId) {
-  unlockAudio();
   document.querySelectorAll('.voice-card').forEach(c => c.classList.toggle('active', c.dataset.voiceId === voiceId));
   selectedVoiceId = voiceId;
   localStorage.setItem('voice_id', voiceId);
@@ -628,6 +627,21 @@ function endCommand(){
   // Always return to wake-word listening — never auto-prompt
   setTimeout(()=>{ voiceBox.classList.remove('visible'); if(wakeActive) runWakeSession(); },5000);
 }
+// ── AUTO-LISTEN after AI asks a question ─────────────────────
+function autoListen(){
+  if(commandMode) return;
+  commandMode=true;
+  setGlow('listening'); setStatus('listening','LISTENING');
+  voiceBox.classList.add('visible');
+  userTranscript.textContent=''; aiTranscript.textContent='Listening...';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, cmd=new SR();
+  cmd.continuous=false; cmd.interimResults=false; cmd.lang='en-US'; cmd.maxAlternatives=1;
+  let got=false;
+  cmd.onresult=async e=>{ got=true; const text=e.results[0][0].transcript; userTranscript.textContent=`You: ${text}`; aiTranscript.textContent='Thinking...'; setGlow('speaking'); setStatus('speaking','RESPONDING'); await handleVoiceCommand(text); endCommand(); };
+  cmd.onerror=()=>{ if(!got) endCommand(); };
+  cmd.onend=()=>{ if(!got) endCommand(); };
+  setTimeout(()=>{ try{cmd.start();}catch{endCommand();} },300);
+}
 
 // ── VOICE COMMAND HANDLER ─────────────────────────────────────
 async function handleVoiceCommand(text){
@@ -659,6 +673,7 @@ async function handleVoiceCommand(text){
       aiTranscript.textContent=`BirdBox: ${data.speech}`;
       // Speak options then return to idle — user says "Hey BirdBox, option 1" to pick
       await speak(data.speech);
+      setTimeout(()=>{ if(!commandMode) autoListen(); }, 400);
     }catch(e){console.error('Nav:',e);await speak('Sorry, there was an error searching for locations.');}
     return;
   }
@@ -699,7 +714,10 @@ async function handleVoiceCommand(text){
       await speak(reply.trim());
       // Log fire-and-forget
       fetch(`${BACKEND}/chat`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,location:null,log_only:true,ai_response:reply.trim()})}).catch(()=>{});
-      // No auto-prompt — user says "Hey BirdBox" to continue
+      // Auto-listen if AI asked a question
+      if(reply.trim().endsWith('?')){
+        setTimeout(()=>{ if(!commandMode) autoListen(); }, 400);
+      }
     }
   }catch(e){console.error('Chat:',e);await speak('Sorry, I could not connect to the server.');}
 }
