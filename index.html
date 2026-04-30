@@ -409,6 +409,15 @@ async function previewVoice(voiceId) {
     const blob = await res.blob();
     const url  = URL.createObjectURL(blob);
     previewAudio = new Audio(url);
+    previewAudio.volume = 1.0;
+    try {
+      const actx   = getHapticCtx();
+      const source = actx.createMediaElementSource(previewAudio);
+      const gain   = actx.createGain();
+      gain.gain.value = 3.0;
+      source.connect(gain);
+      gain.connect(actx.destination);
+    } catch(e) {}
     previewAudio.onended = () => { status.textContent = `${voice.name} selected ✓`; previewAudio = null; URL.revokeObjectURL(url); };
     previewAudio.onerror = () => { status.textContent = `Audio error — using browser voice`; speakBrowser(voice.preview, ()=>{}); };
     const playPromise = previewAudio.play();
@@ -537,9 +546,20 @@ function processQueue() {
     if (!res.ok) { console.error('TTS failed:', res.status); return Promise.reject(); }
     return res.blob();
   }).then(blob => {
-    const audio = new Audio(URL.createObjectURL(blob));
-    audio.onended = () => { resolve(); processQueue(); };
-    audio.onerror = () => { console.error('Audio playback error'); speakBrowser(text, () => { resolve(); processQueue(); }); };
+    const url   = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.volume = 1.0;
+    // boost gain beyond default using Web Audio API
+    try {
+      const actx   = getHapticCtx();
+      const source = actx.createMediaElementSource(audio);
+      const gain   = actx.createGain();
+      gain.gain.value = 3.0; // 3x amplification
+      source.connect(gain);
+      gain.connect(actx.destination);
+    } catch(e) { console.warn('Gain boost unavailable:', e); }
+    audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); };
+    audio.onerror = () => { speakBrowser(text, () => { resolve(); processQueue(); }); };
     audio.play().catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
   }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
 }
