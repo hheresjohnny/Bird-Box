@@ -209,7 +209,6 @@
     </div>
   </div>
 
-
   <div class="settings-section">
     <div class="section-label">🔊 Audio</div>
     <div class="setting-row">
@@ -238,11 +237,7 @@ document.addEventListener('touchstart', () => {
 const BACKEND    = 'https://smelting-unleaded-plow.ngrok-free.dev';
 const WAKE_WORDS = ['hey birdbox','hey bird box','birdbox','bird box','hey bird'];
 
-// ── VOICES — each with distinct personality settings ─────────
-// stability:        lower = more expressive/varied tone
-// similarity_boost: how closely it matches original voice
-// style:            speaking style exaggeration (0–1)
-// speaking_rate is handled via the model naturally
+// ── VOICES ────────────────────────────────────────────────────
 const VOICES = [
   {
     id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', emoji: '👩',
@@ -277,7 +272,7 @@ const VOICES = [
 // ── STATE ─────────────────────────────────────────────────────
 const VALID_VOICE_IDS = ['EXAVITQu4vr4xnSDxMaL','pFZP5JQG7iQjIQuC4Bku','pNInz6obpgDQGcFmaJgB','VR6AewLTigWG4xSOukaG'];
 const savedVoice = localStorage.getItem('voice_id');
-let selectedVoiceId = (savedVoice && VALID_VOICE_IDS.includes(savedVoice)) ? savedVoice : 'pFZP5JQG7iQjIQuC4Bku'; // default Lily
+let selectedVoiceId   = (savedVoice && VALID_VOICE_IDS.includes(savedVoice)) ? savedVoice : 'pFZP5JQG7iQjIQuC4Bku';
 let previewAudio      = null;
 let stream            = null;
 let scanInterval      = null;
@@ -299,7 +294,7 @@ let lastAnnouncedStep = -1;
 let geoWatchId        = null;
 let cachedAddress     = null;
 const hapticPrefs     = { warning: 'single', urgent: 'triple', nav: 'nav' };
-const conversationHistory = []; // keeps last N turns for context
+const conversationHistory = [];
 
 // ── DOM ───────────────────────────────────────────────────────
 const video          = document.getElementById('video');
@@ -349,9 +344,7 @@ function buildVoiceGrid() {
 }
 
 async function previewVoice(voiceId) {
-  // unlock audio on user gesture first
-  try { getHapticCtx(); } catch {}
-  try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
+  unlockAudio();
 
   document.querySelectorAll('.voice-card').forEach(c => c.classList.toggle('active', c.dataset.voiceId === voiceId));
   selectedVoiceId = voiceId;
@@ -370,37 +363,33 @@ async function previewVoice(voiceId) {
       headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
       body: JSON.stringify({ text: voice.preview, voice_id: voiceId, voice_settings: voice.settings })
     });
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`${res.status}: ${err}`);
-    }
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
     const blob = await res.blob();
     const url  = URL.createObjectURL(blob);
     previewAudio = new Audio(url);
     previewAudio.volume = 1.0;
+
+    // attach to shared context BEFORE play()
     try {
-      const actx   = getHapticCtx();
+      const actx   = getSharedAudioCtx();
       const source = actx.createMediaElementSource(previewAudio);
       const gain   = actx.createGain();
-      gain.gain.value = 3.0;
+      gain.gain.value = 2.5;
       source.connect(gain);
       gain.connect(actx.destination);
-    } catch(e) {}
+    } catch(e) { console.warn('Preview gain skipped:', e.message); }
+
     previewAudio.onended = () => { status.textContent = `${voice.name} selected ✓`; previewAudio = null; URL.revokeObjectURL(url); };
     previewAudio.onerror = () => { status.textContent = `Audio error — using browser voice`; speakBrowser(voice.preview, ()=>{}); };
-    const playPromise = previewAudio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => { status.textContent = `Playing ${voice.name}…`; })
-        .catch(e => {
-          console.error('Play blocked:', e);
-          status.textContent = `Tap again to play ${voice.name}`;
-          // second attempt via speakBrowser as fallback
-          speakBrowser(voice.preview, () => { status.textContent = `${voice.name} selected ✓`; });
-        });
-    }
+    previewAudio.play()
+      .then(() => { status.textContent = `Playing ${voice.name}…`; })
+      .catch(e => {
+        console.error('Preview play blocked:', e);
+        status.textContent = `Tap again to play ${voice.name}`;
+        speakBrowser(voice.preview, () => { status.textContent = `${voice.name} selected ✓`; });
+      });
   } catch(e) {
-    console.error('TTS error:', e);
+    console.error('TTS preview error:', e);
     status.textContent = `Backend error — using browser voice`;
     speakBrowser(voice.preview, () => { status.textContent = `${voice.name} selected (browser voice)`; });
   }
@@ -440,11 +429,9 @@ async function updateAddress(lat, lng) {
   try {
     const geo = await fetch(`${BACKEND}/location/address?lat=${lat}&lng=${lng}`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
     const geoData = await geo.json();
-    if (geoData.address && geoData.address !== 'Unknown location') {
-      cachedAddress = geoData.address;
-    } else {
-      cachedAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    }
+    cachedAddress = (geoData.address && geoData.address !== 'Unknown location')
+      ? geoData.address
+      : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   } catch { cachedAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
   return cachedAddress;
 }
@@ -458,17 +445,26 @@ function initLocation() {
     showAlert('safe', `📍 ${addr}`);
     geoWatchId = navigator.geolocation.watchPosition(
       async (pos) => {
-        const newLat = pos.coords.latitude, newLng = pos.coords.longitude;
-        userLocation = { lat: newLat, lng: newLng };
-        // update address every time GPS moves
-        await updateAddress(newLat, newLng);
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        await updateAddress(userLocation.lat, userLocation.lng);
         if (navActive) checkNavProgress();
       },
-      (err) => { const m={1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'}; showAlert('warning', m[err.code]||'GPS error.'); if(err.code===3){geoWatchId=null;setTimeout(initLocation,4000);} },
+      (err) => {
+        const m = {1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'};
+        showAlert('warning', m[err.code] || 'GPS error.');
+        if (err.code === 3) {
+          if (geoWatchId !== null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
+          setTimeout(initLocation, 4000);
+        }
+      },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
     );
   },
-  (err) => { const m={1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'}; showAlert('warning', m[err.code]||'GPS failed.'); if(err.code===3)setTimeout(initLocation,4000); },
+  (err) => {
+    const m = {1:'Location denied.',2:'GPS unavailable.',3:'GPS timed out.'};
+    showAlert('warning', m[err.code] || 'GPS failed.');
+    if (err.code === 3) setTimeout(initLocation, 4000);
+  },
   { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 }
 
@@ -513,81 +509,92 @@ function hapticForLevel(level) {
   if (level==='warning') vibrate(hapticPrefs.warning);
 }
 
-// ── SPEECH — ElevenLabs via backend, unlocked on first user tap ──
-let isSpeaking   = false;
-let audioUnlocked = false;
-const speakQueue  = [];
+// ── SPEECH — shared AudioContext, ElevenLabs voice persists ──
+let isSpeaking     = false;
+let audioUnlocked  = false;
+let sharedAudioCtx = null;
+const speakQueue   = [];
 
-// Call this on any user gesture to unlock audio playback on iOS
+function getSharedAudioCtx() {
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+  return sharedAudioCtx;
+}
+
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
   try {
-    // play a silent audio blob to unlock the audio context
-    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-    const buf  = ctx.createBuffer(1, 1, 22050);
-    const src  = ctx.createBufferSource();
+    const actx = getSharedAudioCtx();
+    const buf  = actx.createBuffer(1, 1, 22050);
+    const src  = actx.createBufferSource();
     src.buffer = buf;
-    src.connect(ctx.destination);
+    src.connect(actx.destination);
     src.start(0);
-    ctx.resume();
+    actx.resume();
   } catch {}
-  try {
-    const u = new SpeechSynthesisUtterance(''); u.volume = 0;
-    window.speechSynthesis.speak(u);
-  } catch {}
+  try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); } catch {}
 }
 
-function speak(text) { return new Promise(resolve => { speakQueue.push({text,resolve}); if(!isSpeaking) processQueue(); }); }
+function speak(text) {
+  return new Promise(resolve => { speakQueue.push({text, resolve}); if (!isSpeaking) processQueue(); });
+}
 
 function processQueue() {
-  if (!speakQueue.length) { isSpeaking=false; return; }
+  if (!speakQueue.length) { isSpeaking = false; return; }
   isSpeaking = true;
   const {text, resolve} = speakQueue.shift();
+  // Always read selectedVoiceId at call time so voice changes take effect immediately
   const voice = VOICES.find(v => v.id === selectedVoiceId) || VOICES[0];
 
   fetch(`${BACKEND}/tts/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
     body: JSON.stringify({ text, voice_id: voice.id, voice_settings: voice.settings })
-  }).then(res => {
-    if (!res.ok) { console.error('TTS failed:', res.status); return Promise.reject(); }
-    return res.blob();
-  }).then(blob => {
+  })
+  .then(res => { if (!res.ok) throw new Error(res.status); return res.blob(); })
+  .then(blob => {
     const url   = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.volume = 1.0;
+
+    // ── KEY FIX: connect gain node to shared context BEFORE play() ──
+    // If we connect after play() the audio is already routed to default
+    // output and createMediaElementSource throws or silently no-ops.
+    try {
+      const actx = getSharedAudioCtx();
+      const src  = actx.createMediaElementSource(audio);
+      const gain = actx.createGain();
+      gain.gain.value = 2.5;
+      src.connect(gain);
+      gain.connect(actx.destination);
+    } catch(e) {
+      console.warn('Gain node skipped:', e.message);
+    }
+
     audio.onended = () => { resolve(); processQueue(); URL.revokeObjectURL(url); };
     audio.onerror = () => { URL.revokeObjectURL(url); speakBrowser(text, () => { resolve(); processQueue(); }); };
-    // play — works because audio was unlocked on START button tap
-    audio.play().then(() => {
-      // try to boost volume via gain node after play starts
-      try {
-        const actx   = new (window.AudioContext || window.webkitAudioContext)();
-        actx.resume().then(() => {
-          const src  = actx.createMediaElementSource(audio);
-          const gain = actx.createGain();
-          gain.gain.value = 3.0;
-          src.connect(gain);
-          gain.connect(actx.destination);
-        });
-      } catch {}
-    }).catch(e => {
+
+    audio.play().catch(e => {
       console.warn('ElevenLabs play failed:', e.message);
       URL.revokeObjectURL(url);
       speakBrowser(text, () => { resolve(); processQueue(); });
     });
-  }).catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
+  })
+  .catch(() => speakBrowser(text, () => { resolve(); processQueue(); }));
 }
 
 function speakBrowser(text, cb) {
   if (!window.speechSynthesis) { cb?.(); return; }
-  const utt = new SpeechSynthesisUtterance(text); utt.rate=1.0; utt.volume=1.0;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 1.0; utt.volume = 1.0;
   utt.onend = () => cb?.(); utt.onerror = () => cb?.();
   window.speechSynthesis.speak(utt);
 }
 
-function cancelSpeech() { speakQueue.length=0; isSpeaking=false; window.speechSynthesis?.cancel(); }
+function cancelSpeech() { speakQueue.length = 0; isSpeaking = false; window.speechSynthesis?.cancel(); }
 
 // ── UI ────────────────────────────────────────────────────────
 function setGlow(state) { glowBorder.className = state; }
@@ -623,10 +630,10 @@ async function doScan() {
 
 // ── START / STOP ──────────────────────────────────────────────
 btnStart.addEventListener('click', async () => {
-  unlockAudio(); // unlock audio on user gesture — must be first
+  unlockAudio(); // must be first — unlocks shared AudioContext on user gesture
   try { getHapticCtx(); } catch {}
   const ok = await startCamera(); if (!ok) return;
-  initLocation(); // start GPS immediately, no delay
+  initLocation();
   btnStart.style.display='none'; btnStop.style.display='flex';
   setStatus('active','LIVE');
   showAlert('safe','BirdBox active. Say "Hey BirdBox" anytime.');
@@ -659,7 +666,16 @@ function runWakeSession() {
 
 // ── COMMAND MODE ──────────────────────────────────────────────
 function playChime() {
-  try { const actx=new(window.AudioContext||window.webkitAudioContext)(); [880,1100].forEach((freq,i)=>{ const osc=actx.createOscillator(),gain=actx.createGain(); osc.connect(gain);gain.connect(actx.destination);osc.frequency.value=freq; const t=actx.currentTime+i*.15; gain.gain.setValueAtTime(.25,t);gain.gain.exponentialRampToValueAtTime(.001,t+.25);osc.start(t);osc.stop(t+.25); }); } catch {}
+  try {
+    const actx = getSharedAudioCtx();
+    [880,1100].forEach((freq,i)=>{
+      const osc=actx.createOscillator(), gain=actx.createGain();
+      osc.connect(gain); gain.connect(actx.destination); osc.frequency.value=freq;
+      const t=actx.currentTime+i*.15;
+      gain.gain.setValueAtTime(.25,t); gain.gain.exponentialRampToValueAtTime(.001,t+.25);
+      osc.start(t); osc.stop(t+.25);
+    });
+  } catch {}
 }
 function activateCommand() {
   commandMode=true; if(scanAbort){scanAbort.abort();scanAbort=null;} cancelSpeech();
@@ -684,69 +700,58 @@ function endCommand() {
 async function handleVoiceCommand(text) {
   const lower = text.toLowerCase();
 
-  // navigation intent — catches: "nearest burger king", "closest pharmacy",
-  // "where is the library", "find me a coffee shop", "take me to subway", etc.
   const navMatch = lower.match(
     /(?:take me to|navigate to|go to|directions to|direct me to|bring me to|get me to|walk me to|lead me to|i want to go to|how do i get to|find me (?:a |an |the )?|find (?:a |an |the )?|nearest |closest |where is (?:the |a |an )?|where('s| is) (?:the |a |an )?|i need (?:a |an |the )?)\s*(.+)/i
   );
   if (navMatch) {
-    // last capture group has the place name
     const query = (navMatch[2] || navMatch[1] || '').trim().replace(/\?+$/, '');
     if (!query) { await speak('What place are you looking for?'); return; }
 
-    aiTranscript.textContent=`BirdBox: Getting your location...`;
+    aiTranscript.textContent = `BirdBox: Getting your location...`;
 
-    // get fresh GPS position before searching
     const freshLocation = await new Promise(resolve => {
       if (!navigator.geolocation) { resolve(userLocation); return; }
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => resolve(userLocation), // fallback to cached
+        () => resolve(userLocation),
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
     });
 
-    if (!freshLocation) {
-      await speak('I need your location first. Please enable GPS and try again.');
-      return;
-    }
+    if (!freshLocation) { await speak('I need your location first. Please enable GPS and try again.'); return; }
     userLocation = freshLocation;
 
-    aiTranscript.textContent=`BirdBox: Searching for ${query} nearby...`;
+    aiTranscript.textContent = `BirdBox: Searching for ${query} nearby...`;
     await speak(`Searching for ${query} nearby.`);
     try {
-      const res=await fetch(`${BACKEND}/navigate`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({query,user_lat:userLocation.lat,user_lng:userLocation.lng})});
-      const data=await res.json();
-      if (!data.places?.length){aiTranscript.textContent=`BirdBox: Sorry, couldn't find ${query} nearby.`;await speak(`Sorry, I couldn't find ${query} nearby.`);return;}
-      window._navPlaces=data.places; window._navQuery=query;
-      aiTranscript.textContent=`BirdBox: ${data.speech}`; await speak(data.speech);
-      setTimeout(()=>{ if(!commandMode)listenForSelection(); },500);
+      const res  = await fetch(`${BACKEND}/navigate`, {method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({query,user_lat:userLocation.lat,user_lng:userLocation.lng})});
+      const data = await res.json();
+      if (!data.places?.length) { aiTranscript.textContent=`BirdBox: Sorry, couldn't find ${query} nearby.`; await speak(`Sorry, I couldn't find ${query} nearby.`); return; }
+      window._navPlaces = data.places; window._navQuery = query;
+      aiTranscript.textContent = `BirdBox: ${data.speech}`;
+      await speak(data.speech);
+      setTimeout(() => { if (!commandMode) listenForSelection(); }, 500);
     } catch(e) { console.error('Nav error:', e); await speak('Sorry, there was an error searching for locations.'); }
     return;
   }
 
-  // option selection
   if (window._navPlaces && /option\s*[123]|first|second|third|one|two|three/i.test(lower)) {
     let idx=0; if(/option\s*2|second|two/i.test(lower))idx=1; if(/option\s*3|third|three/i.test(lower))idx=2;
     const place=window._navPlaces[idx]; if(place){window._navPlaces=null;await startNavigation(place);return;}
   }
 
-  // stop nav
   if (/stop|cancel|end navigation/i.test(lower)) { stopNavigation(); await speak('Navigation stopped.'); return; }
 
-  // general chat — routed through backend with conversation history
   try {
-    // add user message to history
     conversationHistory.push({ role: 'user', content: text });
-    // keep last 10 turns max to avoid token bloat
     if (conversationHistory.length > 10) conversationHistory.splice(0, 2);
 
-    const res=await fetch(`${BACKEND}/chat/stream`,{
+    const res = await fetch(`${BACKEND}/chat/stream`, {
       method:'POST',
       headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},
       body:JSON.stringify({
         message: text,
-        history: conversationHistory.slice(0, -1), // everything before current message
+        history: conversationHistory.slice(0, -1),
         location: userLocation ? { lat: userLocation.lat, lng: userLocation.lng, address: cachedAddress } : null
       })
     });
@@ -754,7 +759,7 @@ async function handleVoiceCommand(text) {
       const errText = await res.text();
       console.error('Chat stream error:', res.status, errText);
       aiTranscript.textContent = `BirdBox: Error ${res.status} — is the backend running?`;
-      await speakBrowser(`Sorry, the server returned an error.`, ()=>{});
+      speakBrowser('Sorry, the server returned an error.', ()=>{});
       return;
     }
     const reader=res.body.getReader(), decoder=new TextDecoder(); let reply='';
@@ -766,13 +771,17 @@ async function handleVoiceCommand(text) {
       }
     }
     if (reply) {
-      // save assistant reply to history
       conversationHistory.push({ role: 'assistant', content: reply.trim() });
-      const navTrigger=reply.match(/starting navigation to (.+)/i);
-      if(navTrigger&&userLocation){const q=navTrigger[1].replace(/[.!?]$/,'').trim();await speak(reply.trim());setTimeout(async()=>{await handleVoiceCommand(`navigate to ${q}`)},300);return;}
+      const navTrigger = reply.match(/starting navigation to (.+)/i);
+      if (navTrigger&&userLocation) {
+        const q=navTrigger[1].replace(/[.!?]$/,'').trim();
+        await speak(reply.trim());
+        setTimeout(async()=>{ await handleVoiceCommand(`navigate to ${q}`); },300);
+        return;
+      }
       await speak(reply.trim());
       fetch(`${BACKEND}/chat`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,location:null,log_only:true,ai_response:reply.trim()})}).catch(()=>{});
-      if(reply.trim().endsWith('?')){setTimeout(()=>{if(!commandMode)listenForSelection();},500);return;}
+      if (reply.trim().endsWith('?')) { setTimeout(()=>{ if(!commandMode) listenForSelection(); },500); return; }
     }
   } catch(e) { console.error('Chat error:', e); await speak('Sorry, I could not connect to the server.'); }
 }
