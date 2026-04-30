@@ -348,17 +348,19 @@ async def tts_stream(req: TTSStreamRequest):
     settings = req.voice_settings or {"stability": 0.5, "similarity_boost": 0.75, "style": 0.2}
     async with httpx.AsyncClient(timeout=20.0) as client:
         r = await client.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{req.voice_id}/stream",
+            f"https://api.elevenlabs.io/v1/text-to-speech/{req.voice_id}",
             headers={"xi-api-key": ELEVEN_KEY, "Content-Type": "application/json"},
             json={
                 "text":           req.text,
                 "model_id":       "eleven_turbo_v2",
-                "voice_settings": settings
+                "voice_settings": settings,
+                "output_format":  "mp3_44100_128"
             }
         )
     if r.status_code != 200:
         return {"error": f"ElevenLabs {r.status_code}: {r.text}"}
-    return StreamingResponse(iter([r.content]), media_type="audio/mpeg")
+    from fastapi.responses import Response
+    return Response(content=r.content, media_type="audio/mpeg")
 
 
 # ── 9. Location update → dashboard ───────────────────────────
@@ -401,7 +403,7 @@ async def get_analytics():
         return {"level_counts":level_counts,"recent_events":recent,"voice_commands":voice_count,"top_obstacles":top_obstacles}
     except Exception as e:
         return {"error": str(e)}
-    
+
 
 # ── 11. WebSocket ─────────────────────────────────────────────
 @app.websocket("/ws")
