@@ -1,4 +1,4 @@
-const GOOGLE_MAPS_API_KEY = 'AIzaSyAfLt0wEer0nmX_WN3-1e--PWN18nJO91E';
+const GOOGLE_MAPS_API_KEY = ''; // Add your Google Maps API key here
   let ws=null,map=null,marker=null,circle=null,pulseCircle=null,mapsReady=false;
   let trailLine=null,trailCoords=[],obstacleDots=[];
   let lastTrailPos=null;
