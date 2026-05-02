@@ -1,201 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>BirdBox</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #080c0c; --surface: #0f1a1a; --border: #1a2e2e;
-    --teal: #00e5c8; --teal-dim: rgba(0,229,200,0.12); --teal-glow: rgba(0,229,200,0.4);
-    --amber: #ffb020; --red: #ff4545; --green: #00e87a;
-    --text: #d0eded; --muted: #4a7070;
-    --mono: 'Space Mono', monospace; --display: 'Syne', sans-serif;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { background: #000; font-family: var(--display); height: 100dvh; overflow: hidden; }
-  #video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-  canvas { display: none; }
-  #glowBorder { position: fixed; inset: 0; z-index: 10; pointer-events: none; transition: box-shadow .4s; }
-  #glowBorder.idle       { box-shadow: none; }
-  #glowBorder.listening  { box-shadow: inset 0 0 60px 8px rgba(0,229,200,.6), inset 0 0 120px 20px rgba(0,229,200,.2); animation: glow-teal 1.2s ease-in-out infinite; }
-  #glowBorder.speaking   { box-shadow: inset 0 0 60px 8px rgba(255,176,32,.6), inset 0 0 120px 20px rgba(255,176,32,.2); animation: glow-amber .8s ease-in-out infinite; }
-  #glowBorder.urgent     { box-shadow: inset 0 0 80px 12px rgba(255,69,69,.8), inset 0 0 160px 30px rgba(255,69,69,.3); animation: glow-red .4s ease-in-out infinite; }
-  #glowBorder.warning    { box-shadow: inset 0 0 40px 4px rgba(255,176,32,.4), inset 0 0 80px 10px rgba(255,176,32,.15); }
-  #glowBorder.navigating { box-shadow: inset 0 0 40px 4px rgba(0,232,122,.4), inset 0 0 80px 10px rgba(0,232,122,.1); animation: glow-green 2s ease-in-out infinite; }
-  @keyframes glow-teal  { 0%,100%{box-shadow:inset 0 0 60px 8px rgba(0,229,200,.6),inset 0 0 120px 20px rgba(0,229,200,.2)} 50%{box-shadow:inset 0 0 90px 16px rgba(0,229,200,.9),inset 0 0 180px 40px rgba(0,229,200,.4)} }
-  @keyframes glow-amber { 0%,100%{box-shadow:inset 0 0 60px 8px rgba(255,176,32,.6),inset 0 0 120px 20px rgba(255,176,32,.2)} 50%{box-shadow:inset 0 0 90px 16px rgba(255,176,32,.9),inset 0 0 180px 40px rgba(255,176,32,.4)} }
-  @keyframes glow-red   { 0%,100%{box-shadow:inset 0 0 80px 12px rgba(255,69,69,.8),inset 0 0 160px 30px rgba(255,69,69,.3)} 50%{box-shadow:inset 0 0 120px 24px rgba(255,69,69,1),inset 0 0 220px 60px rgba(255,69,69,.5)} }
-  @keyframes glow-green { 0%,100%{box-shadow:inset 0 0 40px 4px rgba(0,232,122,.4),inset 0 0 80px 10px rgba(0,232,122,.1)} 50%{box-shadow:inset 0 0 60px 8px rgba(0,232,122,.6),inset 0 0 120px 20px rgba(0,232,122,.2)} }
-  #scanLine { position: fixed; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); opacity: 0; z-index: 11; pointer-events: none; }
-  #scanLine.running { opacity: .4; animation: scan 2s ease-in-out infinite; }
-  @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:.4} 90%{opacity:.4} 100%{top:95%;opacity:0} }
-  #topBar { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding: 48px 20px 16px; background: linear-gradient(to bottom, rgba(8,12,12,.85), transparent); display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--teal); }
-  .logo span { color: #fff; }
-  .top-right { display: flex; align-items: center; gap: 10px; }
-  .status-pill { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 5px 10px; border-radius: 99px; background: rgba(8,12,12,.6); border: 1px solid var(--border); color: var(--muted); backdrop-filter: blur(4px); transition: all .3s; }
-  .status-pill.active     { color: var(--teal);  border-color: var(--teal); }
-  .status-pill.scanning   { color: var(--amber); border-color: var(--amber); }
-  .status-pill.listening  { color: var(--teal);  border-color: var(--teal); background: rgba(0,229,200,.1); }
-  .status-pill.speaking   { color: var(--amber); border-color: var(--amber); background: rgba(255,176,32,.1); }
-  .status-pill.navigating { color: var(--green); border-color: var(--green); background: rgba(0,232,122,.1); }
-  .btn-settings { width: 40px; height: 40px; border-radius: 50%; background: rgba(8,12,12,.6); border: 1px solid var(--border); color: var(--muted); font-size: 18px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); cursor: pointer; }
-  #wakeHint { position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%); z-index: 20; font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: rgba(0,229,200,.6); text-align: center; pointer-events: none; transition: opacity 1s ease; white-space: nowrap; }
-  #wakeHint.hidden { opacity: 0; }
-  #navBar { position: fixed; top: 110px; left: 12px; right: 12px; z-index: 20; background: rgba(8,12,12,.92); border: 1px solid var(--green); border-radius: 12px; padding: 14px 16px; backdrop-filter: blur(8px); display: none; animation: slide-down .3s ease; }
-  #navBar.visible { display: block; }
-  @keyframes slide-down { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .nav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .nav-dest { font-size: 14px; font-weight: 700; color: #fff; }
-  .nav-total { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-  .nav-step { font-size: 15px; font-weight: 600; color: var(--green); line-height: 1.4; }
-  .nav-step-dist { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .btn-stop-nav { padding: 6px 12px; border-radius: 6px; background: rgba(255,69,69,.15); border: 1px solid var(--red); color: var(--red); font-family: var(--mono); font-size: 10px; cursor: pointer; }
-  #bottomHud { position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; padding: 16px 16px 44px; background: linear-gradient(to top, rgba(8,12,12,.9), transparent); }
-  #alertBox { background: rgba(8,12,12,.88); border: 1px solid var(--border); border-left: 4px solid var(--teal); border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(8px); margin-bottom: 12px; display: none; animation: slide-up .25s ease; }
-  #alertBox.visible { display: block; }
-  #alertBox.urgent  { border-left-color: var(--red); }
-  #alertBox.warning { border-left-color: var(--amber); }
-  #alertBox.safe    { border-left-color: var(--teal); }
-  @keyframes slide-up { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .alert-type { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  #alertBox.urgent  .alert-type { color: var(--red); }
-  #alertBox.warning .alert-type { color: var(--amber); }
-  #alertBox.safe    .alert-type { color: var(--teal); }
-  .alert-msg  { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.4; }
-  .alert-time { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 4px; }
-  #voiceBox { background: rgba(8,12,12,.9); border: 1px solid var(--teal); border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(8px); margin-bottom: 12px; display: none; animation: slide-up .25s ease; }
-  #voiceBox.visible { display: block; }
-  .voice-user { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 6px; }
-  .voice-ai   { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; }
-  .bottom-btns { display: flex; gap: 10px; }
-  .btn { flex: 1; padding: 18px; border: none; border-radius: 14px; font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: .02em; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; user-select: none; -webkit-user-select: none; min-height: 64px; cursor: pointer; backdrop-filter: blur(8px); }
-  .btn:active { transform: scale(.96); }
-  .btn-start { background: var(--teal); color: var(--bg); }
-  .btn-stop  { background: rgba(255,69,69,.15); color: var(--red); border: 2px solid var(--red); }
-  .btn-flip  { flex: 0 0 64px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); font-size: 22px; }
-  .frame-count { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3); text-align: center; letter-spacing: .1em; margin-top: 8px; }
-  #noCam { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--surface); }
-  #noCam .icon { font-size: 4rem; opacity: .4; }
-  #noCam p { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.7; }
-  #settingsOverlay { position: fixed; inset: 0; z-index: 100; background: rgba(8,12,12,.97); backdrop-filter: blur(12px); display: none; flex-direction: column; overflow-y: auto; padding: 60px 16px 40px; gap: 14px; }
-  #settingsOverlay.visible { display: flex; }
-  .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .settings-title-main { font-size: 24px; font-weight: 800; color: var(--teal); }
-  .btn-close-settings { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
-  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
-  .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .setting-label-text { font-size: 15px; font-weight: 600; color: var(--text); }
-  .setting-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
-  .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; cursor: pointer; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 99px; transition: .2s; }
-  .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: .2s; }
-  .toggle input:checked + .toggle-slider { background: var(--teal-dim); border: 1px solid var(--teal); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--teal); }
-  .interval-row { display: flex; align-items: center; justify-content: space-between; }
-  .interval-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
-  .interval-pills { display: flex; gap: 6px; }
-  .ipill { padding: 8px 14px; border-radius: 99px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; }
-  .ipill.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
-  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .voice-card { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all .15s; }
-  .voice-card:active { transform: scale(.97); }
-  .voice-card.active { background: var(--teal-dim); border-color: var(--teal); }
-  .voice-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .voice-card-name { font-size: 14px; font-weight: 700; color: var(--text); }
-  .voice-card.active .voice-card-name { color: var(--teal); }
-  .voice-card-tag { font-family: var(--mono); font-size: 9px; color: var(--muted); line-height: 1.5; }
-  .voice-card-desc { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 3px; opacity: .7; }
-</style>
-</head>
-<body>
-
-<video id="video" autoplay playsinline muted></video>
-<canvas id="canvas"></canvas>
-<div id="scanLine"></div>
-<div id="glowBorder" class="idle"></div>
-
-<div id="noCam">
-  <div class="icon">📷</div>
-  <p>Tap START to begin.<br>Say "Hey BirdBox" for voice.</p>
-</div>
-
-<div id="topBar">
-  <div class="logo">Bird<span>Box</span></div>
-  <div class="top-right">
-    <div class="status-pill" id="statusPill">OFFLINE</div>
-    <div class="btn-settings" id="btnSettings">⚙️</div>
-  </div>
-</div>
-
-<div id="navBar">
-  <div class="nav-header">
-    <div class="nav-dest" id="navDest">Navigating...</div>
-    <div class="nav-total" id="navTotal"></div>
-    <button class="btn-stop-nav" id="btnStopNav">✕ Stop</button>
-  </div>
-  <div class="nav-step" id="navStep">Loading directions...</div>
-  <div class="nav-step-dist" id="navStepDist"></div>
-</div>
-
-<div id="wakeHint">Say "Hey BirdBox"</div>
-
-<div id="bottomHud">
-  <div id="voiceBox">
-    <div class="voice-user" id="userTranscript"></div>
-    <div class="voice-ai"   id="aiTranscript"></div>
-  </div>
-  <div id="alertBox">
-    <div class="alert-type" id="alertType">DETECTING</div>
-    <div class="alert-msg"  id="alertMsg">Initializing...</div>
-    <div class="alert-time" id="alertTime"></div>
-  </div>
-  <div class="bottom-btns">
-    <button class="btn btn-flip"  id="btnFlip">⟳</button>
-    <button class="btn btn-start" id="btnStart">▶ START</button>
-    <button class="btn btn-stop"  id="btnStop" style="display:none">■ STOP</button>
-  </div>
-  <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
-</div>
-
-<div id="settingsOverlay">
-  <div class="settings-header">
-    <div class="settings-title-main">Settings</div>
-    <button class="btn-close-settings" id="btnCloseSettings">✕</button>
-  </div>
-  <div class="settings-section">
-    <div class="section-label">📷 Camera</div>
-    <div class="interval-row">
-      <span class="interval-label">Scan every</span>
-      <div class="interval-pills">
-        <div class="ipill" data-val="2000">2s</div>
-        <div class="ipill active" data-val="4000">4s</div>
-        <div class="ipill" data-val="7000">7s</div>
-      </div>
-    </div>
-  </div>
-  <div class="settings-section">
-    <div class="section-label">🔊 Audio</div>
-    <div class="setting-row">
-      <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
-      <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
-    </div>
-    <div class="setting-row" style="border:none">
-      <div><div class="setting-label-text">Silent When Safe</div><div class="setting-desc">Don't speak on clear path</div></div>
-      <label class="toggle"><input type="checkbox" id="silentSafe" checked><span class="toggle-slider"></span></label>
-    </div>
-    <div class="section-label" style="margin-top:16px">🎙️ Voice — tap to preview</div>
-    <div class="voice-grid" id="voiceGrid"></div>
-    <div id="voicePreviewStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;min-height:14px;text-align:center"></div>
-  </div>
-</div>
-
-<script>
 // ════════════════════════════════════════════════════════════════
 // SPEECH ENGINE: fetch → arrayBuffer → decodeAudioData → AudioBufferSourceNode
 // No new Audio() / HTMLMediaElement anywhere.
@@ -627,21 +429,6 @@ function endCommand(){
   // Always return to wake-word listening — never auto-prompt
   setTimeout(()=>{ voiceBox.classList.remove('visible'); if(wakeActive) runWakeSession(); },5000);
 }
-// ── AUTO-LISTEN after AI asks a question ─────────────────────
-function autoListen(){
-  if(commandMode) return;
-  commandMode=true;
-  setGlow('listening'); setStatus('listening','LISTENING');
-  voiceBox.classList.add('visible');
-  userTranscript.textContent=''; aiTranscript.textContent='Listening...';
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, cmd=new SR();
-  cmd.continuous=false; cmd.interimResults=false; cmd.lang='en-US'; cmd.maxAlternatives=1;
-  let got=false;
-  cmd.onresult=async e=>{ got=true; const text=e.results[0][0].transcript; userTranscript.textContent=`You: ${text}`; aiTranscript.textContent='Thinking...'; setGlow('speaking'); setStatus('speaking','RESPONDING'); await handleVoiceCommand(text); endCommand(); };
-  cmd.onerror=()=>{ if(!got) endCommand(); };
-  cmd.onend=()=>{ if(!got) endCommand(); };
-  setTimeout(()=>{ try{cmd.start();}catch{endCommand();} },300);
-}
 
 // ── VOICE COMMAND HANDLER ─────────────────────────────────────
 async function handleVoiceCommand(text){
@@ -673,7 +460,6 @@ async function handleVoiceCommand(text){
       aiTranscript.textContent=`BirdBox: ${data.speech}`;
       // Speak options then return to idle — user says "Hey BirdBox, option 1" to pick
       await speak(data.speech);
-      setTimeout(()=>{ if(!commandMode) autoListen(); }, 400);
     }catch(e){console.error('Nav:',e);await speak('Sorry, there was an error searching for locations.');}
     return;
   }
@@ -714,10 +500,7 @@ async function handleVoiceCommand(text){
       await speak(reply.trim());
       // Log fire-and-forget
       fetch(`${BACKEND}/chat`,{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({message:text,location:null,log_only:true,ai_response:reply.trim()})}).catch(()=>{});
-      // Auto-listen if AI asked a question
-      if(reply.trim().endsWith('?')){
-        setTimeout(()=>{ if(!commandMode) autoListen(); }, 400);
-      }
+      // No auto-prompt — user says "Hey BirdBox" to continue
     }
   }catch(e){console.error('Chat:',e);await speak('Sorry, I could not connect to the server.');}
 }
@@ -763,6 +546,3 @@ function stopNavigation(){
   navBar.classList.remove('visible'); setGlow('idle');
   if(stream) setStatus('active','LIVE'); window._navPlaces=null;
 }
-</script>
-</body>
-</html>

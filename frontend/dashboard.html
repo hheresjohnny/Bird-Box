@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BirdBox — Live Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-name">Bird<em>Box</em></span>
+    <span class="logo-sep">|</span>
+    <span class="logo-sub">Live Dashboard</span>
+  </div>
+  <div class="header-right">
+    <span class="live-badge" id="liveBadge"><span class="live-dot"></span>Phone Live</span>
+    <div class="ws-status">
+      <div class="ws-dot" id="wsDot"></div>
+      <span id="wsLabel">Disconnected</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<div id="map-wrap">
+  <div id="map"></div>
+  <div id="map-placeholder">
+    <div class="ph-ring">🗺️</div>
+    <p>Waiting for phone location…<br>Click Connect below,<br>then open BirdBox on the phone.</p>
+  </div>
+  <div class="map-hud">
+    <div class="map-address" id="mapAddress">—</div>
+    <div class="map-coords"  id="mapCoords">—</div>
+  </div>
+  <div class="map-last-seen" id="mapLastSeen">Last seen: —</div>
+</div>
+
+<div id="sidebar">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">⬤ Current Status</span>
+      <span class="panel-meta" id="statusAge">—</span>
+    </div>
+    <div class="status-body">
+      <div class="status-ring" id="statusRing">✅</div>
+      <div class="status-info">
+        <div class="status-lvl"  id="statusLevel">Safe</div>
+        <div class="status-msg"  id="statusMsg">Waiting for data…</div>
+        <div class="status-time" id="statusTime">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="padding:0">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num"   id="statTotal">0</div><div class="stat-lbl">Scans</div></div>
+      <div class="stat-box"><div class="stat-num w" id="statWarn">0</div><div class="stat-lbl">Warnings</div></div>
+      <div class="stat-box"><div class="stat-num u" id="statUrgent">0</div><div class="stat-lbl">Urgent</div></div>
+    </div>
+  </div>
+
+  <div class="connect-section">
+    <div class="connect-row">
+      <input class="ws-input" id="wsUrl" value="wss://smelting-unleaded-plow.ngrok-free.dev/ws" placeholder="wss://your-ngrok-url/ws">
+      <button class="btn-connect" id="btnConnect">Connect</button>
+    </div>
+    <div class="connect-hint" id="connectHint">Click Connect, then open BirdBox on your phone.</div>
+  </div>
+
+  <div class="log-panel panel">
+    <div class="panel-header">
+      <span class="panel-title">🗒 Obstacle Log</span>
+      <span class="panel-meta" id="logCount">0 events</span>
+    </div>
+    <div class="log-controls">
+      <button class="filter-pill active all" data-filter="all">All</button>
+      <button class="filter-pill" data-filter="urgent">Urgent</button>
+      <button class="filter-pill" data-filter="warning">Warning</button>
+      <button class="filter-pill" data-filter="safe">Safe</button>
+    </div>
+    <div class="log-scroll" id="logScroll">
+      <div class="log-empty" id="logEmpty">No events yet.<br>Start scanning on the phone.</div>
+    </div>
+  </div>
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>

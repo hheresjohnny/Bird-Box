@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BirdBox</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+<div id="scanLine"></div>
+<div id="glowBorder" class="idle"></div>
+
+<div id="noCam">
+  <div class="icon">📷</div>
+  <p>Tap START to begin.<br>Say "Hey BirdBox" for voice.</p>
+</div>
+
+<div id="topBar">
+  <div class="logo">Bird<span>Box</span></div>
+  <div class="top-right">
+    <div class="status-pill" id="statusPill">OFFLINE</div>
+    <div class="btn-settings" id="btnSettings">⚙️</div>
+  </div>
+</div>
+
+<div id="navBar">
+  <div class="nav-header">
+    <div class="nav-dest" id="navDest">Navigating...</div>
+    <div class="nav-total" id="navTotal"></div>
+    <button class="btn-stop-nav" id="btnStopNav">✕ Stop</button>
+  </div>
+  <div class="nav-step" id="navStep">Loading directions...</div>
+  <div class="nav-step-dist" id="navStepDist"></div>
+</div>
+
+<div id="wakeHint">Say "Hey BirdBox"</div>
+
+<div id="bottomHud">
+  <div id="voiceBox">
+    <div class="voice-user" id="userTranscript"></div>
+    <div class="voice-ai"   id="aiTranscript"></div>
+  </div>
+  <div id="alertBox">
+    <div class="alert-type" id="alertType">DETECTING</div>
+    <div class="alert-msg"  id="alertMsg">Initializing...</div>
+    <div class="alert-time" id="alertTime"></div>
+  </div>
+  <div class="bottom-btns">
+    <button class="btn btn-flip"  id="btnFlip">⟳</button>
+    <button class="btn btn-start" id="btnStart">▶ START</button>
+    <button class="btn btn-stop"  id="btnStop" style="display:none">■ STOP</button>
+  </div>
+  <div class="frame-count" id="frameCount">FRAMES ANALYZED: 0</div>
+</div>
+
+<div id="settingsOverlay">
+  <div class="settings-header">
+    <div class="settings-title-main">Settings</div>
+    <button class="btn-close-settings" id="btnCloseSettings">✕</button>
+  </div>
+  <div class="settings-section">
+    <div class="section-label">📷 Camera</div>
+    <div class="interval-row">
+      <span class="interval-label">Scan every</span>
+      <div class="interval-pills">
+        <div class="ipill" data-val="2000">2s</div>
+        <div class="ipill active" data-val="4000">4s</div>
+        <div class="ipill" data-val="7000">7s</div>
+      </div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="section-label">🔊 Audio</div>
+    <div class="setting-row">
+      <div><div class="setting-label-text">Voice Alerts</div><div class="setting-desc">Speak obstacle descriptions</div></div>
+      <label class="toggle"><input type="checkbox" id="voiceAlerts" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="setting-row" style="border:none">
+      <div><div class="setting-label-text">Silent When Safe</div><div class="setting-desc">Don't speak on clear path</div></div>
+      <label class="toggle"><input type="checkbox" id="silentSafe" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="section-label" style="margin-top:16px">🎙️ Voice — tap to preview</div>
+    <div class="voice-grid" id="voiceGrid"></div>
+    <div id="voicePreviewStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;min-height:14px;text-align:center"></div>
+  </div>
+</div>
+
+<script src="index.js"></script>
+</body>
+</html>
